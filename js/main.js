@@ -70,6 +70,7 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
 /**
  * Initialize Google map, called from HTML.
  */
+/*out for now so don't need internet:
 window.initMap = () => {
   let loc = {
     lat: 40.722216,
@@ -81,7 +82,7 @@ window.initMap = () => {
     scrollwheel: false
   });
   updateRestaurants();
-}
+}*/
 
 /**
  * Update page and map for current restaurants.
@@ -129,7 +130,9 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     ul.append(createRestaurantHTML(restaurant));
   });
+  /*out for now so don't need internet:
   addMarkersToMap();
+  */
 }
 
 /**
@@ -155,17 +158,21 @@ createRestaurantHTML = (restaurant) => {
   address.innerHTML = restaurant.address;
   li.append(address);
 
-  const more = document.createElement('a');
-  more.innerHTML = 'View Details';
-  more.href = DBHelper.urlForRestaurant(restaurant);
-  li.append(more)
+  const div_container = document.createElement('div');
+  li.append(div_container);
 
-  return li
+  const more = document.createElement('button');
+  more.innerHTML = 'View Details';
+  /*more.href = DBHelper.urlForRestaurant(restaurant);*/
+  div_container.append(more);
+
+  return li;
 }
 
 /**
  * Add markers for current restaurants to the map.
  */
+/*out for now so don't need internet:
 addMarkersToMap = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     // Add marker to the map
@@ -175,4 +182,4 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     });
     self.markers.push(marker);
   });
-}
+}*/
