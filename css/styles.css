@@ -1,7 +1,7 @@
 @charset "utf-8";
 /* CSS Document */
 
-html,body,td,th,p, button{
+html,body,td,th,p {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 16pt;
 	color: #333;
@@ -71,7 +71,7 @@ nav h1 a {
     background-color: #eee;
     font-size: 17px;
     margin: 0;
-    width: calc(50% - 80px);
+    text-align: left;
 }
 
 /* Display list items side by side */
@@ -110,7 +110,6 @@ nav h1 a {
   background-color: #3397DB;
   align-items: center;
   display: flex;
-  flex: flex-wrap;
 }
 .filter-options h2 {
   color: white;
@@ -183,7 +182,11 @@ nav h1 a {
   display: flex;
   justify-content: center;
 }
-#restaurants-list li button {
+#restaurants-list li a {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16pt;
+  color: #333;
+  line-height: 1.2em;
   background-color: orange;
   border-bottom: 3px solid #eee;
   color: #fff;
@@ -195,29 +198,16 @@ nav h1 a {
 }
 
 /* ====================== Restaurant Details ====================== */
-.inside header {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 1000;
+.inside main {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
 }
-.inside #map-container {
-  background: blue none repeat scroll 0 0;
-  height: 87%;
-  position: fixed;
-  right: 0;
-  top: 80px;
-  width: 50%;
-}
+
 .inside #map {
-  background-color: #ccc;
-  height: 100%;
+  height: 400px;
   width: 100%;
-}
-.inside #footer {
-  bottom: 0;
-  position: absolute;
-  width: 50%;
+  background-color: #ccc;
 }
 #restaurant-name {
   color: #f18200;
@@ -230,32 +220,39 @@ nav h1 a {
   line-height: 1.1;
 }
 #restaurant-img {
-	width: 90%;
+  display: block;
+  margin: 0;
+  max-width: 100%;
+  min-height: 230px;
+  min-width: 100%;
 }
 #restaurant-address {
   font-size: 12pt;
   margin: 10px 0px;
 }
-#restaurant-cuisine {
+#restaurant-cuisine {  /* I want this to match the size of the image, so I think both will need to go in a div*/
+  /*what to do with the times?  Maybe keep the map top level always, then side-by-side the restaurant and times*/
   background-color: #333;
   color: #ddd;
   font-size: 12pt;
   font-weight: 300;
   letter-spacing: 10px;
-  margin: 0 0 20px;
+  margin: 20px 0 20px;
   padding: 2px 0;
   text-align: center;
   text-transform: uppercase;
 	width: 90%;
+  margin-left: auto;
+  margin-right: auto;
 }
 #restaurant-container, #reviews-container {
   border-bottom: 1px solid #d9d9d9;
   border-top: 1px solid #fff;
-  padding: 140px 40px 30px;
-  width: 50%;
+  padding: 30px 0px 30px;
+  text-align: center;
 }
 #reviews-container {
-  padding: 30px 40px 80px;
+
 }
 #reviews-container h2 {
   color: #f58500;
@@ -284,6 +281,8 @@ nav h1 a {
 }
 #restaurant-hours td {
   color: #666;
+  vertical-align: top;
+  padding: 5px;
 }
 /* ====================== Responsive Breakpoints ====================== */
 /* Old settings that wouldn't work well for 1x and 2x versions of the images

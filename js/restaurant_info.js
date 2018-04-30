@@ -83,7 +83,9 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
     row.appendChild(day);
 
     const time = document.createElement('td');
-    time.innerHTML = operatingHours[key];
+    let strTime = operatingHours[key];
+    strTime = strTime.replace(', ', '<br/>');
+    time.innerHTML = strTime;
     row.appendChild(time);
 
     hours.appendChild(row);
@@ -161,3 +163,14 @@ getParameterByName = (name, url) => {
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
+
+test = function() {
+  fetchRestaurantFromURL((error, restaurant) => {
+    if (error) {
+      console.log('what a mess');
+    } else {
+      fillBreadcrumb();
+    }
+  })
+};
+test();  //since not loading google maps right now

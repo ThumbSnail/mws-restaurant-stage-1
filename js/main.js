@@ -165,9 +165,9 @@ createRestaurantHTML = (restaurant) => {
   const div_container = document.createElement('div');
   li.append(div_container);
 
-  const more = document.createElement('button');
+  const more = document.createElement('a');
   more.innerHTML = 'View Details';
-  /*more.href = DBHelper.urlForRestaurant(restaurant);*/
+  more.href = DBHelper.urlForRestaurant(restaurant);
   div_container.append(more);
 
   return li;
@@ -187,3 +187,5 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     self.markers.push(marker);
   });
 }*/
+
+updateRestaurants();  //since not loading google maps right now
