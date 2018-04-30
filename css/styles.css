@@ -59,17 +59,11 @@ nav h1 {
 }
 nav h1 a {
   color: #fff;
-  font-size: 14pt;
   font-weight: 200;
   letter-spacing: 10px;
   text-transform: uppercase;
-  line-height: 1.5;
-}
-
-@media screen and (max-width: 500px) {
-  nav h1 a {
-    font-size: 18pt;
-  }
+  line-height: 1.4;
+  font-size: 22pt;
 }
 
 #breadcrumb {
@@ -159,10 +153,31 @@ nav h1 a {
   min-height: 380px;
   padding: 0 30px 25px;
   text-align: left;
-  width: 270px;
-  /*width: 90%;
-  I think I'd like it to expand to a certain point, then switch over to showing multiple items side by side*/
+  width: 90%;
+  /*I think I'd like it to expand to a certain point, then switch over to showing multiple items side by side*/
 }
+@media screen and (min-width: 600px) {
+  #restaurants-list li  {
+    box-sizing: border-box;
+    width: 570px;
+    height:  590px;
+  }
+}
+@media screen and (min-width: 800px) {
+  #restaurants-list li  {
+    box-sizing: border-box;
+    width: 45%;
+    height: auto;
+  }
+}
+@media screen and (min-width: 1200px) {
+  #restaurants-list li  {
+    box-sizing: border-box;
+    width: 30%;
+    height:  auto;
+  }
+}
+
 #restaurants-list .restaurant-img {
   background-color: #ccc;
   display: block;
