@@ -70,7 +70,6 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
 /**
  * Initialize Google map, called from HTML.
  */
-/*out for now so don't need internet:
 window.initMap = () => {
   let loc = {
     lat: 40.722216,
@@ -82,7 +81,7 @@ window.initMap = () => {
     scrollwheel: false
   });
   updateRestaurants();
-}*/
+}
 
 /**
  * Update page and map for current restaurants.
@@ -130,9 +129,7 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     ul.append(createRestaurantHTML(restaurant));
   });
-  /*out for now so don't need internet:
   addMarkersToMap();
-  */
 }
 
 /**
@@ -176,7 +173,6 @@ createRestaurantHTML = (restaurant) => {
 /**
  * Add markers for current restaurants to the map.
  */
-/*out for now so don't need internet:
 addMarkersToMap = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     // Add marker to the map
@@ -186,6 +182,4 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     });
     self.markers.push(marker);
   });
-}*/
-
-updateRestaurants();  //since not loading google maps right now
+}

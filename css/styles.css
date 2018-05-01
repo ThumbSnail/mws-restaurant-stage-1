@@ -99,7 +99,7 @@ nav h1 a {
 }
 /* ====================== Map ====================== */
 #map {
-  max-height: 400px;
+  height: 400px;
   width: 100%;
   background-color: #ccc;
 }
@@ -203,9 +203,12 @@ nav h1 a {
   flex-wrap: wrap;
   justify-content: center;
 }
+.inside #map-container {
+  width: 100%;
+}
 .inside #map {
-  max-height: 400px;
-  width: 100vw;
+  height: 400px;
+  width: 100%;
   background-color: #ccc;
 }
 #restaurant-name {
