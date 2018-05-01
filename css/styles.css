@@ -137,7 +137,7 @@ nav h1 a {
   margin: 0px 16px 0px 16px;
 }
 .filter-options select:focus {
-  /*light blue on blue doesn't work well*/
+  outline: 4px solid orange;
 }
 
 /* ====================== Restaurant Listing ====================== */
