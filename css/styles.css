@@ -99,7 +99,7 @@ nav h1 a {
 }
 /* ====================== Map ====================== */
 #map {
-  height: 400px;
+  max-height: 400px;
   width: 100%;
   background-color: #ccc;
 }
@@ -203,10 +203,9 @@ nav h1 a {
   flex-wrap: wrap;
   justify-content: center;
 }
-
 .inside #map {
-  height: 400px;
-  width: 100%;
+  max-height: 400px;
+  width: 100vw;
   background-color: #ccc;
 }
 #restaurant-name {
@@ -228,7 +227,7 @@ nav h1 a {
 }
 #restaurant-address {
   font-size: 12pt;
-  margin: 10px 0px;
+  margin: 20px 0px;
 }
 #restaurant-cuisine {  /* I want this to match the size of the image, so I think both will need to go in a div*/
   /*what to do with the times?  Maybe keep the map top level always, then side-by-side the restaurant and times*/
@@ -246,43 +245,58 @@ nav h1 a {
   margin-right: auto;
 }
 #restaurant-container, #reviews-container {
-  border-bottom: 1px solid #d9d9d9;
-  border-top: 1px solid #fff;
   padding: 30px 0px 30px;
   text-align: center;
 }
-#reviews-container {
-
+#restaurant-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+#divider {
+  width: 100%;
+  height: 60px;
+  background-color: #3397DB;
 }
 #reviews-container h2 {
   color: #f58500;
   font-size: 24pt;
   font-weight: 300;
-  letter-spacing: -1px;
   padding-bottom: 1pt;
+  text-transform: uppercase;
 }
 #reviews-list {
   margin: 0;
   padding: 0;
 }
 #reviews-list li {
+  box-sizing: border-box;
   background-color: #fff;
-    border: 2px solid #f3f3f3;
-  display: block;
+  border: 2px solid #f3f3f3;
   list-style-type: none;
   margin: 0 0 30px;
-  overflow: hidden;
   padding: 0 20px 20px;
-  position: relative;
-  width: 85%;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
 }
 #reviews-list li p {
   margin: 0 0 10px;
+}
+.rating-text {
+  font-weight: bolder;
+}
+.review-text {
+  padding-top: 20px;
+  text-align: justify;
+  line-height: 1.25em;
 }
 #restaurant-hours td {
   color: #666;
   vertical-align: top;
   padding: 5px;
+  text-align: left;
 }
 /* ====================== Responsive Breakpoints ====================== */
 /* Old settings that wouldn't work well for 1x and 2x versions of the images
@@ -322,6 +336,7 @@ nav h1 a {
     background-color: #f3f3f3;
   }
 }*/
+/* ====================== Main Page Breakpoints ====================== */
 @media screen and (min-width: 494px) {
   #restaurants-list li  {
     box-sizing: border-box;
@@ -364,6 +379,20 @@ nav h1 a {
     width: 1400px;
     margin-left: auto;
     margin-right: auto;
-    background-color: #f3f3f3;
+    background-color: #ccc;
+  }
+}
+/* ====================== Detail Page Breakpoints ====================== */
+@media screen and (min-width: 650px) {  /*So that when the table wraps to same row as image there's more space in between*/
+  #restaurant-hours {
+    padding: 0 20px 0 20px;
+  }
+@media screen and (min-width: 1100px) {
+  .inside {
+    box-sizing: border-box;
+    width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #ccc;
   }
 }
