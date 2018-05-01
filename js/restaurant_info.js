@@ -62,6 +62,7 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   strName = strName.replace('/img/', '').replace('.jpg', '');
   strName = '/img/' + strName + '-2x.jpg';
   image.srcset = strName + ' 2x';
+  image.alt = restaurant.name;
 
   const cuisine = document.getElementById('restaurant-cuisine');
   cuisine.innerHTML = restaurant.cuisine_type;

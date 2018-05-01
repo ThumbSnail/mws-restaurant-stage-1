@@ -203,7 +203,7 @@ nav h1 a {
   flex-wrap: wrap;
   justify-content: center;
 }
-.inside #map-container {
+#map-container {
   width: 100%;
 }
 .inside #map {
