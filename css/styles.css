@@ -1,10 +1,10 @@
 @charset "utf-8";
 /* CSS Document */
 
-html,body,td,th,p {
+html,body,td,th, p{
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 16pt;
-	color: #333;
+	color: #000;
 	line-height: 1.2em;
 }
 body {
@@ -17,7 +17,7 @@ ul, li {
 	color: #333;
 }
 a {
-	color: orange;
+	color: #7D2200;
 	text-decoration: none;
 }
 a:hover, a:focus {
@@ -39,13 +39,16 @@ main {
   min-height: 100%;
 }
 #footer {
-  background-color: #444;
-  color: #aaa;
+  background-color: #043150;
+  color: #fff;
   font-size: 10pt;
   letter-spacing: 1px;
   padding: 25px;
   text-align: center;
   text-transform: uppercase;
+}
+#footer a {
+  color: #FD8B61;
 }
 /* ====================== Navigation ====================== */
 #skiplink {
@@ -58,7 +61,7 @@ main {
 }
 nav {
   width: 100%;
-  background-color: #252831;
+  background-color: #043150;
   text-align:center;
 }
 nav h1 {
@@ -76,8 +79,7 @@ nav h1 a {
 #breadcrumb {
     padding: 10px 40px 16px;
     list-style: none;
-    background-color: #eee;
-    font-size: 17px;
+    background-color: #fff;
     margin: 0;
     text-align: left;
 }
@@ -92,12 +94,6 @@ nav h1 a {
     padding: 8px;
     color: black;
     content: "/\00a0";
-}
-
-/* Add a color to all links inside the list */
-#breadcrumb li a {
-    color: #0275d8;
-    text-decoration: none;
 }
 
 /* Add a color on mouse-over */
@@ -115,7 +111,7 @@ nav h1 a {
 .filter-options {
   width: 100%;
   height: 60px;
-  background-color: #3397DB;
+  background-color: #125382;
   align-items: center;
   display: flex;
 }
@@ -137,7 +133,7 @@ nav h1 a {
   margin: 0px 16px 0px 16px;
 }
 .filter-options select:focus {
-  outline: 4px solid orange;
+  outline: 4px solid #7D2200;
 }
 
 /* ====================== Restaurant Listing ====================== */
@@ -170,7 +166,7 @@ nav h1 a {
   min-width: 100%;
 }
 #restaurants-list li h1 {
-  color: #f18200;
+  color: #7D2200;
   font-family: Arial,sans-serif;
   font-size: 1.2rem;
   font-weight: 200;
@@ -193,16 +189,15 @@ nav h1 a {
 #restaurants-list li a {
   font-family: Arial, Helvetica, sans-serif;
   font-size: 16pt;
-  color: #333;
   line-height: 1.2em;
-  background-color: orange;
-  border-bottom: 3px solid #eee;
+  background-color: #7D2200;
   color: #fff;
   margin: 20px 0 0 0;
   padding: 10px 15px 10px 15px;
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
+  box-shadow: 2px 4px 6px #222;
 }
 
 /* ====================== Restaurant Details ====================== */
@@ -220,7 +215,7 @@ nav h1 a {
   background-color: #ccc;
 }
 #restaurant-name {
-  color: #f18200;
+  color: #7D2200;
   font-family: Arial,sans-serif;
   font-size: 20pt;
   font-weight: 200;
@@ -237,14 +232,12 @@ nav h1 a {
   min-width: 100%;
 }
 #restaurant-address {
-  font-size: 12pt;
   margin: 20px 0px;
 }
 #restaurant-cuisine {  /* I want this to match the size of the image, so I think both will need to go in a div*/
   /*what to do with the times?  Maybe keep the map top level always, then side-by-side the restaurant and times*/
-  background-color: #333;
-  color: #ddd;
-  font-size: 12pt;
+  background-color: #7D2200;
+  color: #fff;
   font-weight: 300;
   letter-spacing: 10px;
   margin: 20px 0 20px;
@@ -264,14 +257,19 @@ nav h1 a {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
+  background-color: #fff;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 #divider {
   width: 100%;
   height: 60px;
-  background-color: #3397DB;
+  background-color: #125382;
 }
 #reviews-container h2 {
-  color: #f58500;
+  color: #7D2200;
   font-size: 24pt;
   font-weight: 300;
   padding-bottom: 1pt;
@@ -304,7 +302,6 @@ nav h1 a {
   line-height: 1.25em;
 }
 #restaurant-hours td {
-  color: #666;
   vertical-align: top;
   padding: 5px;
   text-align: left;
