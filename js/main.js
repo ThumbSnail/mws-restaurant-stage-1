@@ -23,6 +23,7 @@ window.addEventListener('load', function() {
 document.addEventListener('DOMContentLoaded', (event) => {
   fetchNeighborhoods();
   fetchCuisines();
+  updateRestaurants();
 });
 
 /**
@@ -83,7 +84,7 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
 /**
  * Initialize Google map, called from HTML.
  */
-window.initMap = () => {
+window.initMap = (response) => {
   let loc = {
     lat: 40.722216,
     lng: -73.987501
@@ -93,7 +94,8 @@ window.initMap = () => {
     center: loc,
     scrollwheel: false
   });
-  updateRestaurants();
+  displayMap(true);
+  addMarkersToMap();
 }
 
 /**
@@ -142,7 +144,6 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     ul.append(createRestaurantHTML(restaurant));
   });
-  addMarkersToMap();
 }
 
 /**
@@ -187,6 +188,19 @@ createRestaurantHTML = (restaurant) => {
 }
 
 /**
+ * Display the map if there is one; otherwise, don't give the div a height
+ */
+displayMap = function(boolean) {
+  if (boolean) {
+    document.getElementById('map').setAttribute("style","height:400px");
+  }
+  else
+  {
+    document.getElementById('map').setAttribute("style","height:0px");
+  }
+};
+
+/**
  * Add markers for current restaurants to the map.
  */
 addMarkersToMap = (restaurants = self.restaurants) => {
@@ -198,4 +212,4 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     });
     self.markers.push(marker);
   });
-}
+};

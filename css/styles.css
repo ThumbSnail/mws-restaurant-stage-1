@@ -103,7 +103,6 @@ nav h1 a {
 }
 /* ====================== Map ====================== */
 #map {
-  height: 400px;
   width: 100%;
   background-color: #ccc;
 }
@@ -198,7 +197,6 @@ nav h1 a {
   text-decoration: none;
   text-transform: uppercase;
   box-shadow: 2px 4px 6px #222;
-  vertical-align: bottom;
 }
 
 /* ====================== Restaurant Details ====================== */
@@ -209,9 +207,9 @@ nav h1 a {
 }
 #map-container {
   width: 100%;
+  max-height: 400px;
 }
 .inside #map {
-  height: 400px;
   width: 100%;
   background-color: #ccc;
 }
@@ -228,7 +226,7 @@ nav h1 a {
 #restaurant-img {
   display: block;
   margin: 0;
-  max-width: 100%;
+  max-width: 400px;
   min-height: 230px;
   min-width: 100%;
 }

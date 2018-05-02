@@ -2,22 +2,31 @@ let restaurant;
 var map;
 
 /**
- * Initialize Google map, called from HTML.
+ *  Set up page to display even when there's no internet connection
  */
-window.initMap = () => {
+document.addEventListener('DOMContentLoaded', (event) => {
+  //displayMap(false);  //default to not showing the map; if there is one, the google callback will trigger it
   fetchRestaurantFromURL((error, restaurant) => {
     if (error) { // Got an error!
       console.error(error);
     } else {
-      self.map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 16,
-        center: restaurant.latlng,
-        scrollwheel: false
-      });
       fillBreadcrumb();
-      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
     }
   });
+});
+
+/**
+ * Initialize Google map, called from HTML.
+ */
+window.initMap = () => {
+  self.map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 16,
+    center: self.restaurant.latlng,
+    scrollwheel: false
+  });
+  displayMap(true);
+  DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
+  console.log('initMap in restaurant.js was called');
 }
 
 /**
@@ -154,6 +163,19 @@ fillBreadcrumb = (restaurant=self.restaurant) => {
   li.innerHTML = restaurant.name;
   breadcrumb.appendChild(li);
 }
+
+/**
+ * Display the map if there is one; otherwise, don't give the div a height
+ */
+displayMap = function(boolean) {
+  if (boolean) {
+    document.getElementById('map').setAttribute("style","height:400px");
+  }
+  else
+  {
+    document.getElementById('map').setAttribute("style","height:0px");
+  }
+};
 
 /**
  * Get a parameter by name from page URL.
