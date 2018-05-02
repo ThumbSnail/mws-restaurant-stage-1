@@ -58,10 +58,10 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const image = document.getElementById('restaurant-img');
   image.className = 'restaurant-img'
   let strName = DBHelper.imageUrlForRestaurant(restaurant);
-  image.src = strName;
   strName = strName.replace('/img/', '').replace('.jpg', '');
   strName = '/img/' + strName + '-2x.jpg';
-  image.srcset = strName + ' 2x';
+  image.src = strName;
+  //image.srcset = strName + ' 2x';  //serviceworker renders this pointless
   image.alt = restaurant.name;
 
   const cuisine = document.getElementById('restaurant-cuisine');

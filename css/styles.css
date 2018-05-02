@@ -198,6 +198,7 @@ nav h1 a {
   text-decoration: none;
   text-transform: uppercase;
   box-shadow: 2px 4px 6px #222;
+  vertical-align: bottom;
 }
 
 /* ====================== Restaurant Details ====================== */
