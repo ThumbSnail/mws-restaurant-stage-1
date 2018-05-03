@@ -1,11 +1,53 @@
 let restaurant;
 var map;
 
+/* With internet connection, when Google Maps loads, its init event triggers loading page content (since
+ * the map requires some of the restaurant data).  However, without internet, no content would display since
+ * Google Maps doesn't call its init function in that case.  The service worker is set up to detect that 
+ * failed fetch event and then message the client.  But... sometimes the client's listener doesn't load 
+ * fast enough to receive that message.  So this boolean is part of a backup plan to still display content
+ * in that situation.
+ */
+let isContentLoaded = false;
+function displayContent(msg) {
+  fetchRestaurantFromURL((error, restaurant) => {
+    if (error) { // Got an error!
+      console.error(error);
+    } else {
+      fillBreadcrumb();
+    }
+  });
+
+  isContentLoaded = true;
+}
+
+document.addEventListener('DOMContentLoaded', (event) => {
+  if (!navigator.serviceWorker) return;
+
+  //for receiving a message from the service worker that google maps didn't load (when offline):
+  //in this situation, make sure the page's content displays
+  navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data.msg == 'Google Maps failed') {
+      console.log('Received message from service worker: ' + event.data.msg);
+      displayContent();
+    }
+  });
+
+  //sometimes the service worker posts its message before the client is ready to receive
+  //in that case, include this as a failsafe so that cached content appears when offline
+  setTimeout(function() {
+    if (isContentLoaded) return;
+
+    console.log('Backup timeout called to ensure data loaded');
+    displayContent();
+  }, 1000);
+});
+
 /**
  *  Set up page to display even when there's no internet connection
  */
-document.addEventListener('DOMContentLoaded', (event) => {
-  //displayMap(false);  //default to not showing the map; if there is one, the google callback will trigger it
+window.initMap = () => {
+  isContentLoaded = true;
   fetchRestaurantFromURL((error, restaurant) => {
     if (error) { // Got an error!
       console.error(error);
