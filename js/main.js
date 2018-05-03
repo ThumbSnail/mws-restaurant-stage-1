@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
  */
 fetchNeighborhoods = () => {
   DBHelper.fetchNeighborhoods((error, neighborhoods) => {
-    if (error) { // Got an error
+    if (error) {
       console.error(error);
     } else {
       self.neighborhoods = neighborhoods;
@@ -136,7 +136,7 @@ updateRestaurants = () => {
   const neighborhood = nSelect[nIndex].value;
 
   DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
-    if (error) { // Got an error!
+    if (error) {
       console.error(error);
     } else {
       resetRestaurants(restaurants);
@@ -215,19 +215,6 @@ createRestaurantHTML = (restaurant) => {
 
   return li;
 }
-
-/**
- * Display the map if there is one; otherwise, don't give the div a height
- */
-displayMap = function(boolean) {
-  if (boolean) {
-    document.getElementById('map').setAttribute("style","height:400px");
-  }
-  else
-  {
-    document.getElementById('map').setAttribute("style","height:0px");
-  }
-};
 
 /**
  * Add markers for current restaurants to the map.

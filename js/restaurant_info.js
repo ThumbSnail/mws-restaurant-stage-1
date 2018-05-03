@@ -9,9 +9,9 @@ var map;
  * in that situation.
  */
 let isContentLoaded = false;
-function displayContent(msg) {
+function displayContent() {
   fetchRestaurantFromURL((error, restaurant) => {
-    if (error) { // Got an error!
+    if (error) {
       console.error(error);
     } else {
       fillBreadcrumb();
@@ -43,8 +43,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
   }, 1000);
 });
 
+
+
 /**
- *  Set up page to display even when there's no internet connection
+ * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
   isContentLoaded = true;
@@ -52,24 +54,19 @@ window.initMap = () => {
     if (error) { // Got an error!
       console.error(error);
     } else {
+      let mapElem = document.getElementById('map');
+      self.map = new google.maps.Map(mapElem, {
+        zoom: 16,
+        center: restaurant.latlng,
+        scrollwheel: false
+      });
+      //give the div a height so that the map appears:
+      mapElem.setAttribute("style","height:400px");
       fillBreadcrumb();
+      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
     }
   });
-});
-
-/**
- * Initialize Google map, called from HTML.
- */
-window.initMap = () => {
-  self.map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 16,
-    center: self.restaurant.latlng,
-    scrollwheel: false
-  });
-  displayMap(true);
-  DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
-  console.log('initMap in restaurant.js was called');
-}
+};
 
 /**
  * Get current restaurant from page URL.
@@ -140,7 +137,7 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
 
     const time = document.createElement('td');
     let strTime = operatingHours[key];
-    strTime = strTime.replace(', ', '<br/>');
+    strTime = strTime.replace(', ', '<br>');
     time.innerHTML = strTime;
     row.appendChild(time);
 
@@ -205,19 +202,6 @@ fillBreadcrumb = (restaurant=self.restaurant) => {
   li.innerHTML = restaurant.name;
   breadcrumb.appendChild(li);
 }
-
-/**
- * Display the map if there is one; otherwise, don't give the div a height
- */
-displayMap = function(boolean) {
-  if (boolean) {
-    document.getElementById('map').setAttribute("style","height:400px");
-  }
-  else
-  {
-    document.getElementById('map').setAttribute("style","height:0px");
-  }
-};
 
 /**
  * Get a parameter by name from page URL.
