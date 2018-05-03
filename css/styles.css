@@ -2,37 +2,37 @@
 /* CSS Document */
 
 html,body,td,th, p{
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 16pt;
-	color: #000;
-	line-height: 1.2em;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16pt;
+  color: #000;
+  line-height: 1.2em;
 }
 body {
-	background-color: #fdfdfd;
-	margin: 0;
-	/*position:relative;*/
+  background-color: #fdfdfd;
+  margin: 0;
+  /*position:relative;*/
 }
 ul, li {
-	font-family: Arial, Helvetica, sans-serif;
-	color: #333;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #333;
 }
 a {
-	color: #7D2200;
-	text-decoration: none;
+  color: #7D2200;
+  text-decoration: none;
 }
 a:hover, a:focus {
-	color: #3397db;
-	text-decoration: none;
+  color: #3397db;
+  text-decoration: none;
 }
 a img{
-	border: none 0px #fff;
+  border: none 0px #fff;
 }
 h1, h2, h3, h4, h5, h6 {
   font-family: Arial, Helvetica, sans-serif;
   margin: 0 0 20px;
 }
 article, aside, canvas, details, figcaption, figure, footer, header, hgroup, menu, nav, section {
-	display: block;
+  display: block;
 }
 main {
   background-color: #f3f3f3;
@@ -103,7 +103,6 @@ nav h1 a {
 }
 /* ====================== Map ====================== */
 #map {
-  height: 400px;
   width: 100%;
   background-color: #ccc;
 }
@@ -198,7 +197,6 @@ nav h1 a {
   text-decoration: none;
   text-transform: uppercase;
   box-shadow: 2px 4px 6px #222;
-  vertical-align: bottom;
 }
 
 /* ====================== Restaurant Details ====================== */
@@ -209,9 +207,9 @@ nav h1 a {
 }
 #map-container {
   width: 100%;
+  max-height: 400px;
 }
 .inside #map {
-  height: 400px;
   width: 100%;
   background-color: #ccc;
 }
@@ -228,7 +226,7 @@ nav h1 a {
 #restaurant-img {
   display: block;
   margin: 0;
-  max-width: 100%;
+  max-width: 400px;
   min-height: 230px;
   min-width: 100%;
 }
@@ -245,7 +243,7 @@ nav h1 a {
   padding: 2px 0;
   text-align: center;
   text-transform: uppercase;
-	width: 90%;
+  width: 90%;
   margin-left: auto;
   margin-right: auto;
 }

@@ -4,10 +4,20 @@ let restaurants,
 var map
 var markers = []
 
+/* With internet connection, when Google Maps loads, its init event triggers loading page content (since
+ * the map requires some of the restaurant data).  However, without internet, no content would display since
+ * Google Maps doesn't call its init function in that case.  The service worker is set up to detect that 
+ * failed fetch event and then message the client.  But... sometimes the client's listener doesn't load 
+ * fast enough to receive that message.  So this boolean is part of a backup plan to still display content
+ * in that situation.
+ */
+let isContentLoaded = false;  //set true in updateRestaurants()
+let isMapLoaded = false;  //used to determine if a map exists and thus should have markers placed on it
+
 /**
  * Set up the service worker
  */
-window.addEventListener('load', function() {
+document.addEventListener('DOMContentLoaded', (event) => {
   if (!navigator.serviceWorker) return;
 
   navigator.serviceWorker.register('/sw.js').then(function(registration) {
@@ -15,14 +25,26 @@ window.addEventListener('load', function() {
   }, function(err) {
     console.log('ServiceWorker registration failed: ', err);
   });
-});
 
-/**
- * Fetch neighborhoods and cuisines as soon as the page is loaded.
- */
-document.addEventListener('DOMContentLoaded', (event) => {
+  //for receiving a message from the service worker that google maps didn't load (when offline):
+  navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data.msg == 'Google Maps failed') {
+      console.log('Received msg from serviceworker: ' + event.data.msg);
+      updateRestaurants();
+    }
+  });
+
   fetchNeighborhoods();
   fetchCuisines();
+
+  //sometimes the service worker posts its message before the client is ready to receive
+  //in that case, include this as a failsafe so that the list of restaurants automatically appears when offline
+  setTimeout(function() {
+    if (isContentLoaded) return;
+
+    console.log('backup timeout called to ensure data loaded');
+    updateRestaurants();
+  }, 1000);
 });
 
 /**
@@ -84,15 +106,19 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
+  isMapLoaded = true;
   let loc = {
     lat: 40.722216,
     lng: -73.987501
   };
-  self.map = new google.maps.Map(document.getElementById('map'), {
+  let mapElem = document.getElementById('map');
+  self.map = new google.maps.Map(mapElem, {
     zoom: 12,
     center: loc,
     scrollwheel: false
   });
+  //give the div a height so that the map appears:
+  mapElem.setAttribute("style","height:400px");
   updateRestaurants();
 }
 
@@ -115,6 +141,7 @@ updateRestaurants = () => {
     } else {
       resetRestaurants(restaurants);
       fillRestaurantsHTML();
+      isContentLoaded = true;
     }
   })
 }
@@ -142,7 +169,9 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     ul.append(createRestaurantHTML(restaurant));
   });
-  addMarkersToMap();
+  if (isMapLoaded) {  //then a map actually exists, so add markers.
+    addMarkersToMap();
+  }
 }
 
 /**
