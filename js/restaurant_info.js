@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
   navigator.serviceWorker.addEventListener('message', event => {
     if (event.data.msg == 'Google Maps failed') {
       console.log('Received message from service worker: ' + event.data.msg);
+      if (isContentLoaded) return;
       displayContent();
     }
   });

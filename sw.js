@@ -36,6 +36,7 @@ self.addEventListener('fetch', function(event) {
       else {
         return fetch(event.request).then(function(response) {
           return response;  //fetch as normal
+          //nothing to cache as all site files will have been previously cached at install
         }).catch(function(error) {  //attempt to handle case where google map doesn't load since offline
             let url = new URL(event.request.url);
             if (url.origin == 'https://maps.googleapis.com') {
