@@ -24,12 +24,14 @@
     <section id="beyondmap">
       <div class="filter-options">
         <h2>Filter:</h2>
-        <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()" aria-label="Filter by neighborhood">
-          <option value="all">All Cities</option>
-        </select>
-        <select id="cuisines-select" name="cuisines" onchange="updateRestaurants()" aria-label="Filter by cuisine">
-          <option value="all">All Cuisines</option>
-        </select>
+        <div class="select-fields">
+          <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()" aria-label="Filter by neighborhood">
+            <option value="all">All Cities</option>
+          </select>
+          <select id="cuisines-select" name="cuisines" onchange="updateRestaurants()" aria-label="Filter by cuisine">
+            <option value="all">All Cuisines</option>
+          </select>
+        </div>
       </div>
       <ul id="restaurants-list"></ul>
     </section>
