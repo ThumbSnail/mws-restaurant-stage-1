@@ -5,6 +5,7 @@ const URLS_TO_CACHE = [
   '/css/styles.css',
   '/js/main.js',
   '/js/dbhelper.js',
+  '/js/idb.js',
   '/js/restaurant_info.js'
   /*'/data/restaurants.json'  now on the other server.  Should you delete this from this git repository, too? */
 ];

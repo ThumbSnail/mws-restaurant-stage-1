@@ -1,26 +1,9 @@
+/* Globals */
 let restaurants,
   neighborhoods,
-  cuisines
-var map
-var markers = []
-
-//Database functions from class lectures
-let dbPromise
-function openDatabase() {
-  // If the browser doesn't support service worker,
-  // we don't care about having a database
-  if (!navigator.serviceWorker) {
-    return Promise.resolve();
-  }
-
-  return idb.open('test', 1, function(upgradeDb) {
-    var store = upgradeDb.createObjectStore('tests', {
-      keyPath: 'id'
-    });
-    store.createIndex('by-date', 'time');
-  });
-}
-
+  cuisines;
+var map;
+var markers = [];
 /* With internet connection, when Google Maps loads, its init event triggers loading page content (since
  * the map requires some of the restaurant data).  However, without internet, no content would display since
  * Google Maps doesn't call its init function in that case.  The service worker is set up to detect that 
@@ -54,9 +37,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
   fetchNeighborhoods();
   fetchCuisines();
-
-  dbPromise = openDatabase();
-  console.log('hopefully a database promise: ' + dbPromise);
 
   //sometimes the service worker posts its message before the client is ready to receive
   //in that case, include this as a failsafe so that the list of restaurants automatically appears when offline
