@@ -8,15 +8,32 @@ class DBHelper {
    * Change this to restaurants.json file location on your server.
    */
   static get DATABASE_URL() {
-    const port = 8000 // Change this to your server port
-    return `http://localhost:${port}/data/restaurants.json`;
+    const port = 1337 // Change this to your server port
+    return `http://localhost:${port}/`;
   }
 
+
+
+  //!!!This gets called 3 times, which seems silly.  Can't you cache the results and then have the other functions check that cache?
+  //or... I guess this function itself should check the cache first.  If it exists, then just pull from the cache.
+  //^Still... is accessing the cache 3 times necessary?  Can't you grab once from the cache and reuse that?
   /**
    * Fetch all restaurants.
    */
   static fetchRestaurants(callback) {
-    let xhr = new XMLHttpRequest();
+    fetch(DBHelper.DATABASE_URL + 'restaurants').then(function(response) {
+      if (response.status === 200) {
+        response.json().then(function(json) {
+          callback(null, json);
+        });
+      }
+    }).catch(function(err) {
+      console.log('This error in fetchRestaurants: ' + err);
+      callback(err, null);
+    });
+
+
+    /*let xhr = new XMLHttpRequest();
     xhr.open('GET', DBHelper.DATABASE_URL);
     xhr.onload = () => {
       if (xhr.status === 200) { // Got a success response from server!
@@ -28,7 +45,7 @@ class DBHelper {
         callback(error, null);
       }
     };
-    xhr.send();
+    xhr.send();*/
   }
 
   /**

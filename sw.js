@@ -5,8 +5,8 @@ const URLS_TO_CACHE = [
   '/css/styles.css',
   '/js/main.js',
   '/js/dbhelper.js',
-  '/js/restaurant_info.js',
-  '/data/restaurants.json'
+  '/js/restaurant_info.js'
+  /*'/data/restaurants.json'  now on the other server.  Should you delete this from this git repository, too? */
 ];
 for (let i = 1; i <= 10; i++) {
   URLS_TO_CACHE.push('/img/' + i + '-2x.jpg');
