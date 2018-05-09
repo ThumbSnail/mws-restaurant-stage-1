@@ -341,6 +341,16 @@ class Controller {
     }
   }
 
+  registerServiceWorker() {
+    if (!navigator.serviceWorker) return;
+
+    navigator.serviceWorker.register('/sw.js').then(function(registration) {
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }, function(err) {
+      console.log('ServiceWorker registration failed: ', err);
+    });
+  }
+
 
 //controller:
 //open the database
@@ -355,8 +365,6 @@ class Controller {
   loadSite() {
     const self = this;
     self.fetchRestaurantData().then(function(json) {
-      console.log('after fetch, what is the json:');
-      console.log(json);
       /*** Model Related ***/
       model.addFetchedRestaurants(json);
       model.addUrlsToRestaurants();
@@ -373,54 +381,33 @@ class Controller {
   }
 }
 
+//add some more comments to code
+
+//removing the map = performance rating of 92.
+
 //Map needs to be moved to bottom of screen, especially for mobile (and then don't draw it until in view)
 //But would that really fix it?  The map is just SO SLOW.  I think you'll have to have a button / ask the user
 //if they want to view a map.  Otherwise, it's just going to load way too slowly.
-
-//Is the opendatabase stuff slow?
 
 //I don't think you have to cache much early on now, just the index.html?  Once you get the JSON, then fetch requests are made for the images
 //**but the issue is that the service worker doesn't exist on the first install, right?  
 //so it can only prevent network fetch requests later on and NOT intercept the first ones...
 //will clients.claim() help in the activate event?
+  //^Nope.  Serviceworker is just too slow.  I can't believe there's no way to NOT download the most giant-sized pictures... too bad.
+
+//Huh, the project notes make it seem like IndexedDB should go through the serviceworker...?
+//https://developers.google.com/web/ilt/pwa/live-data-in-the-service-worker
+//That makes no sense.  How can you "be able to visit any page you've seen" when the serviceworker doesn't take effect until
+//a 2nd visit?
 
 
-/*** Initial Setup ***/
+/*** Load the Page ***/
 
-// !!!!! Yeah, could this be changed to make it better/faster?
-// Start fetching the data immediately (even before the DOM loads)
-// can you open the database right away?
-// when can you start caching via the Cache API?
-// so, make a model and a controller rightaway
-// view needs to wait until the DOM exists (is that what DOMContentLoaded is, or does that wait even longer)
-// service worker seems to need to be later, but is that correct?
 document.addEventListener('DOMContentLoaded', function(event) {
   model = new Model();
   view = new View();
   controller = new Controller();
 
+  controller.registerServiceWorker();  
   controller.loadSite();
 });
-
-//commenting out for now (hopefully):
-commentedOut = `
-
-/**
- * Set up the service worker
- */
-document.addEventListener('DOMContentLoaded', (event) => {
-  if (!navigator.serviceWorker) return;
-
-  navigator.serviceWorker.register('/sw.js').then(function(registration) {
-    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-  }, function(err) {
-    console.log('ServiceWorker registration failed: ', err);
-  });
-
-});
-
-
-
-
-
-}`

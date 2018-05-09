@@ -3,8 +3,7 @@ const URLS_TO_CACHE = [
   '/',
   '/restaurant.html',
   '/css/styles.css',
-  '/js/main.js',
-  '/js/dbhelper.js',
+  '/js/allMain.js',
   '/js/idb.js',
   '/js/restaurant_info.js'
   /*'/data/restaurants.json'  now on the other server.  Should you delete this from this git repository, too? */
@@ -29,6 +28,7 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
+  //I think you need to check for origin here?:
   event.respondWith(
     caches.match(event.request).then(function(response) {
       if (response) {  //return cache match
@@ -38,15 +38,8 @@ self.addEventListener('fetch', function(event) {
         return fetch(event.request).then(function(response) {
           return response;  //fetch as normal
           //nothing to cache as all site files will have been previously cached at install
-        }).catch(function(error) {  //attempt to handle case where google map doesn't load since offline
-            let url = new URL(event.request.url);
-            if (url.origin == 'https://maps.googleapis.com') {
-              clients.matchAll().then(function(clientList) {
-                clientList[0].postMessage({
-                  msg : 'Google Maps failed'
-                });
-              });              
-            }
+        }).catch(function(error) {
+            console.log('failed fetch request');
           });
       }
     })
