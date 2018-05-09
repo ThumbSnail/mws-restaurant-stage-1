@@ -25,10 +25,10 @@
       <div class="filter-options">
         <h2>Filter:</h2>
         <div class="select-fields">
-          <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()" aria-label="Filter by neighborhood">
+          <select id="neighborhoods-select" name="neighborhoods" onchange="controller.updateDisplayedRestaurants()" aria-label="Filter by neighborhood">
             <option value="all">All Cities</option>
           </select>
-          <select id="cuisines-select" name="cuisines" onchange="updateRestaurants()" aria-label="Filter by cuisine">
+          <select id="cuisines-select" name="cuisines" onchange="controller.updateDisplayedRestaurants()" aria-label="Filter by cuisine">
             <option value="all">All Cuisines</option>
           </select>
         </div>
@@ -41,7 +41,7 @@
   <!--<script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
   <script type="application/javascript" charset="utf-8" src="js/main.js"></script>-->
   <script type="application/javascript" charset="utf-8" src="js/allMain.js"></script>
-  <!--<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyrqBHpWngKKtzAfAtlR1Bivdlnj-wTZc&libraries=places&callback=initMap"></script>-->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyrqBHpWngKKtzAfAtlR1Bivdlnj-wTZc&libraries=places&callback=controller.readyForMap"></script>
 
 
   <footer id="footer">

@@ -1,5 +1,6 @@
 /*** Globals ***/
-let model, view, controller;
+let model, view;
+var controller;  //This uses var because controller needs to be available globally so that Google Maps can access it as its callback
 
 /*** Model ***/
 class Model {
@@ -87,7 +88,6 @@ class Model {
 /*** View ***/
 class View {
   constructor() {
-    self = this;
     /*** HTML Elements ***/
     /*** Select Fields ***/
     this._neighborhoodSelect = document.getElementById('neighborhoods-select');
@@ -98,6 +98,7 @@ class View {
     this._map = '';
     this._mapDiv = document.getElementById('map');
     this._mapMarkers = [];
+    this._isMapDisplayed = false;
 
     this._displayedRestaurants = [];  //which restaurants are currently displayed
   }
@@ -182,31 +183,32 @@ class View {
 
   updateDisplayedRestaurants() {
     //First clear what is already there
-    self._restaurantsList.innerHTML = '';
+    this._restaurantsList.innerHTML = '';
 
-    self._displayedRestaurants.forEach(function(restaurant) {
-      self._restaurantsList.append(self.createRestaurantHTML(restaurant));
-    });
+    this._displayedRestaurants.forEach(function(restaurant) {
+      this._restaurantsList.append(this.createRestaurantHTML(restaurant));
+    }, this);
   }
 
   /*** Google Map Related ***/
 
-  //might be able to change some of this stuff now since the page won't be tied to/dependent on the map
   initMap() {
-    isMapLoaded = True;
+    const self = this;
     let loc = {
       lat: 40.722216,
       lng: -73.987501
     };
-    this._map = new google.maps.Map(this._mapDiv, {
+    self._map = new google.maps.Map(self._mapDiv, {
       zoom: 12,
       center: loc,
       scrollwheel: false
     });
-    this._map.setAttribute("style","height:400px");
+    self._mapDiv.setAttribute("style","height:400px");
+    self._isMapDisplayed = true;
   }
 
   createMapMarker(restaurant) {
+
     const marker = new google.maps.Marker({
       position: restaurant.latlng,
       title: restaurant.name,
@@ -218,21 +220,35 @@ class View {
   }
 
   addMarkersToMap() {
-    this._displayedRestaurants.forEach(function(restaurant) {
-      const marker = createMapMarker(restaurant);
+    const self = this;
+    self._displayedRestaurants.forEach(function(restaurant) {
+      const marker = self.createMapMarker(restaurant);
       google.maps.event.addListener(marker, 'click', () => {
         window.location.href = marker.url
       });
-      this._mapMarkers.push(marker);
+      self._mapMarkers.push(marker);
     });
   }
 
-  removeMapMarkers() {
-    this._mapMarkers.forEach(marker => marker.setMap(null));
-    this._mapMarkers = [];
+  updateDisplayedMapMarkers() {
+    const arrDisplayedRestaurantNames = this._displayedRestaurants.map(restaurant => restaurant.name);
+
+    this._mapMarkers.forEach(function(marker) {
+      if (arrDisplayedRestaurantNames.includes(marker.title)) {
+        marker.setVisible(true);
+      }
+      else {
+        marker.setVisible(false);
+      }
+    });
+  }
+
+  getIsMapDisplayed() {
+    return this._isMapDisplayed;
   }
 }
 
+/*** Controller ***/
 class Controller {
   constructor() {
     /*** For IndexedDB ***/
@@ -241,7 +257,30 @@ class Controller {
     this._DB_OBJ_STORE = 'restaurants';
     this._DATABASE_SERVER_PORT = 1337;
     this._DATABASE_URL = `http://localhost:${this._DATABASE_SERVER_PORT}/`;
+
+    /*** For Google Maps ***/
+    this._MAX_READYFORMAP_CALLS = 2;
+    this._numReadyForMapCalls= 0;
   }
+
+  /*
+   * I only want the Google Map to display (and have markers added) if and after:
+   *  1.  The Google Map callback has fired (calling controller.mapCallback)
+   *  2.  The JSON data to fill the Model has been fetched
+   *
+   * The only successful solution I've been able to implement is having both of these events trigger a callback,
+   * counting the number of times it's happened, and then once the target has been hit, actually doing everything
+   * with the map.  Via https://stackoverflow.com/questions/9156611/how-do-i-execute-something-after-all-the-callbacks-are-finished-in-javascript
+   */
+  readyForMap() {
+    this._numReadyForMapCalls++;
+
+    if (this._numReadyForMapCalls === this._MAX_READYFORMAP_CALLS) {
+      view.initMap();
+      view.addMarkersToMap();
+    }
+  }
+
 
   // !!! I wish there was a way to have separate DB and network functions.
   //  If database already exists and has stuff in it, skip the network
@@ -259,6 +298,15 @@ class Controller {
     });
   }
 
+  updateDisplayedRestaurants() {
+    view.setDisplayedRestaurants(model.getRestaurantsByCuisineAndNeighborhood(view.getSelectedCuisine(), view.getSelectedNeighborhood()));
+    view.updateDisplayedRestaurants();
+
+    if (view.getIsMapDisplayed()) {
+      view.updateDisplayedMapMarkers();
+    }
+  }
+
 
 //controller:
 //open the database
@@ -271,7 +319,8 @@ class Controller {
 //get filtered restaurants from the model with data from view's getSelectedOption(selectField), pass to view's setDisplayedRestaurants
 //handle map stuff, adding markers
   loadSite() {
-    this.fetchNetworkJSON().then(function(json) {
+    const self = this;
+    self.fetchNetworkJSON().then(function(json) {
       /*** Model Related ***/
       model.addFetchedRestaurants(json);
       model.addUrlsToRestaurants();
@@ -281,17 +330,37 @@ class Controller {
       /*** View Related ***/
       view.fillSelectField(view._neighborhoodSelect, model.getNeighborhoodOptions());
       view.fillSelectField(view._cuisineSelect, model.getCuisineOptions());
-      //^These work, but the HTML is calling UpdateRestaurants() which doesn't exist!
+      self.updateDisplayedRestaurants();
 
-      view.setDisplayedRestaurants(model.getRestaurantsByCuisineAndNeighborhood(view.getSelectedCuisine(), view.getSelectedNeighborhood()));
-      view.updateDisplayedRestaurants();
-      //skip map for now.
+      //This works when loading google maps synchronously...  but that obviously slows down the page load.
+      /*
+      <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyrqBHpWngKKtzAfAtlR1Bivdlnj-wTZc&libraries=places"></script>
+  <script type="application/javascript" charset="utf-8" src="js/allMain.js"></script>
+      */
+      //view.initMap();
+      //view.addMarkersToMap();
+
+      self.readyForMap();
     });
   }
 }
 
+//I think you still need some kind of boolean that the map is loaded
+//that's because controller.updateDisplayedRestaurants needs to know whether or not to add map markers (when people filter via HTML)
 
-// TODO: in model/view/controller, go in and change 'this' to 'self' to avoid the function closure issue I just ran into
+/*How to make map load faster...
+have an initMap function that makes a promise that resolves upon being called?  
+Still don't like how the initMap function isn't called when Google maps doesn't load; would be better to catch that error elsewhere
+  ^you can do this synchronously:  if (!google) then no map
+there's a google map promises library:  https://www.npmjs.com/package/google-maps-promise
+DON'T auto load it and instead ask for user input before displaying a map (that would certainly help the load time on mobile)
+
+
+Actually, it no longer matters if the map loads or not.  The map's default state is hidden.  And I already load the page content
+regardless of the map.  Thus, if the map fails, I don't care.
+So I just need a promise that resolves when initMap is called
+
+*/
 
 
 /*** Initial Setup ***/
@@ -310,7 +379,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
 
   controller.loadSite();
 });
-
 
 //commenting out for now (hopefully):
 commentedOut = `
