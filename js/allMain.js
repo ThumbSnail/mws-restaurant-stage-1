@@ -257,10 +257,61 @@ class Controller {
     this._DB_OBJ_STORE = 'restaurants';
     this._DATABASE_SERVER_PORT = 1337;
     this._DATABASE_URL = `http://localhost:${this._DATABASE_SERVER_PORT}/`;
+    this._dbPromise = this.openDatabase();
 
     /*** For Google Maps ***/
     this._MAX_READYFORMAP_CALLS = 2;
     this._numReadyForMapCalls= 0;
+  }
+
+  /*** IndexedDB Related ***/
+
+  openDatabase() {
+    if (!('indexedDB' in window)) return Promise.resolve();
+
+    self = this;
+
+    return idb.open(self._DB_NAME, self._DB_VER, function(upgradeDb) {
+      upgradeDb.createObjectStore(self._DB_OBJ_STORE, {
+        keyPath: 'id'
+      });
+    });
+  }
+
+  saveToDatabase(db, json) {
+    let tx = db.transaction(this._DB_OBJ_STORE, 'readwrite');
+    let store = tx.objectStore(this._DB_OBJ_STORE);
+    json.forEach(function(restaurant) {
+      store.put(restaurant);
+    });
+  }
+
+  fetchRestaurantData() {
+    self = this;
+
+    //First, check the database
+    return self._dbPromise.then(function(db) {
+      let store = db.transaction(self._DB_OBJ_STORE).objectStore(self._DB_OBJ_STORE);
+      return store.getAll().then(function(arrRestaurants) {
+        if (arrRestaurants.length === 0) {  //no data in the database, so fetch from network (and save to database)
+          return fetch(self._DATABASE_URL + 'restaurants').then(function(response) {
+            console.log('requesting json from server');
+            if (response.status === 200) {
+              return response.json().then(function(json) {  //store data in the database and return it to what asked for it
+                self.saveToDatabase(db, json);
+                return json;
+              });
+            }
+          }).catch(function(err) {
+            console.log('This error in going to network in fetchNetworkJSON: ' + err);
+          });
+        }
+        else { //already have the data so just return the array of restaurants from the database
+          console.log('Returning data from database.');
+          return arrRestaurants;
+        }
+      });
+    });
   }
 
   /*
@@ -279,23 +330,6 @@ class Controller {
       view.initMap();
       view.addMarkersToMap();
     }
-  }
-
-
-  // !!! I wish there was a way to have separate DB and network functions.
-  //  If database already exists and has stuff in it, skip the network
-  //  If database doesn't exist, skip that entirely and head straight to the network
-
-  //just test out the network response for now to make sure this code reconstruction is successful
-  fetchNetworkJSON() {
-    return fetch(this._DATABASE_URL + 'restaurants').then(function(response) {
-      console.log('requesting json from server');
-      if (response.status === 200) {
-        return response.json();  //a promise that resolves to the actual JSON
-      }
-    }).catch(function(err) {
-      console.log('This error in going to network in fetchNetworkJSON: ' + err);
-    });
   }
 
   updateDisplayedRestaurants() {
@@ -320,7 +354,9 @@ class Controller {
 //handle map stuff, adding markers
   loadSite() {
     const self = this;
-    self.fetchNetworkJSON().then(function(json) {
+    self.fetchRestaurantData().then(function(json) {
+      console.log('after fetch, what is the json:');
+      console.log(json);
       /*** Model Related ***/
       model.addFetchedRestaurants(json);
       model.addUrlsToRestaurants();
@@ -332,35 +368,21 @@ class Controller {
       view.fillSelectField(view._cuisineSelect, model.getCuisineOptions());
       self.updateDisplayedRestaurants();
 
-      //This works when loading google maps synchronously...  but that obviously slows down the page load.
-      /*
-      <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAyrqBHpWngKKtzAfAtlR1Bivdlnj-wTZc&libraries=places"></script>
-  <script type="application/javascript" charset="utf-8" src="js/allMain.js"></script>
-      */
-      //view.initMap();
-      //view.addMarkersToMap();
-
       self.readyForMap();
     });
   }
 }
 
-//I think you still need some kind of boolean that the map is loaded
-//that's because controller.updateDisplayedRestaurants needs to know whether or not to add map markers (when people filter via HTML)
+//Map needs to be moved to bottom of screen, especially for mobile (and then don't draw it until in view)
+//But would that really fix it?  The map is just SO SLOW.  I think you'll have to have a button / ask the user
+//if they want to view a map.  Otherwise, it's just going to load way too slowly.
 
-/*How to make map load faster...
-have an initMap function that makes a promise that resolves upon being called?  
-Still don't like how the initMap function isn't called when Google maps doesn't load; would be better to catch that error elsewhere
-  ^you can do this synchronously:  if (!google) then no map
-there's a google map promises library:  https://www.npmjs.com/package/google-maps-promise
-DON'T auto load it and instead ask for user input before displaying a map (that would certainly help the load time on mobile)
+//Is the opendatabase stuff slow?
 
-
-Actually, it no longer matters if the map loads or not.  The map's default state is hidden.  And I already load the page content
-regardless of the map.  Thus, if the map fails, I don't care.
-So I just need a promise that resolves when initMap is called
-
-*/
+//I don't think you have to cache much early on now, just the index.html?  Once you get the JSON, then fetch requests are made for the images
+//**but the issue is that the service worker doesn't exist on the first install, right?  
+//so it can only prevent network fetch requests later on and NOT intercept the first ones...
+//will clients.claim() help in the activate event?
 
 
 /*** Initial Setup ***/
@@ -383,18 +405,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
 //commenting out for now (hopefully):
 commentedOut = `
 
-
-//possible controller stuff:
-/* With internet connection, when Google Maps loads, its init event triggers loading page content (since
- * the map requires some of the restaurant data).  However, without internet, no content would display since
- * Google Maps doesn't call its init function in that case.  The service worker is set up to detect that 
- * failed fetch event and then message the client.  But... sometimes the client's listener doesn't load 
- * fast enough to receive that message.  So this boolean is part of a backup plan to still display content
- * in that situation.
- */
-let isContentLoaded = false;  //set true in updateRestaurants()
-let isMapLoaded = false;  //used to determine if a map exists and thus should have markers placed on it
-
 /**
  * Set up the service worker
  */
@@ -407,126 +417,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
     console.log('ServiceWorker registration failed: ', err);
   });
 
-  //for receiving a message from the service worker that google maps didn't load (when offline):
-  navigator.serviceWorker.addEventListener('message', event => {
-    if (event.data.msg == 'Google Maps failed') {
-      console.log('Received msg from serviceworker: ' + event.data.msg);
-      if (isContentLoaded) return;
-      updateRestaurants();
-    }
-  });
-
-  fetchNeighborhoods();
-  fetchCuisines();
-
-  //sometimes the service worker posts its message before the client is ready to receive
-  //in that case, include this as a failsafe so that the list of restaurants automatically appears when offline
-  setTimeout(function() {
-    if (isContentLoaded) return;
-
-    console.log('backup timeout called to ensure data loaded');
-    updateRestaurants();
-  }, 1000);
 });
 
 
 
-More controller stuff from DBHelper:
-let dbPromise = DBHelper.openDatabase();  //just do this as soon as the javascript loads?
 
-Database stuff / fetching:
-
-class DBHelper {
-
-  /**
-   * For IndexedDB
-   */
-  static openDatabase() {
-    console.log('DBHelper.openDatabase called');
-    // If the browser doesn't support service worker,
-    // we don't care about having a database
-    if (!navigator.serviceWorker) {
-      return Promise.resolve();
-    }
-
-    return idb.open(DB_NAME, DB_VER, function(upgradeDb) {
-      upgradeDb.createObjectStore(DB_OBJ_STORE, {
-        keyPath: 'id'
-      });
-    });
-  }
-
-  static saveDataToDatabase(db, json) {
-    let tx = db.transaction(DB_OBJ_STORE, 'readwrite');
-    let store = tx.objectStore(DB_OBJ_STORE);
-    json.forEach(function(restaurant) {
-      store.put(restaurant);
-    });
-  }
-
-  //!!!This gets called 3 times, which seems silly.  Can't you cache the results and then have the other functions check that cache?
-  //or... I guess this function itself should check the cache first.  If it exists, then just pull from the cache.
-  //^Still... is accessing the cache 3 times necessary?  Can't you grab once from the cache and reuse that?
-  /**
-   * Fetch all restaurants.
-   */
-  static fetchRestaurants(callback) {
-    console.log('DBHelper.fetchRestaurants called.');
-
-    /*  !!!! For some reason, this function is getting called twice early on, thus requests from the network TWICE.  Hmmm.*/
-    //pretty sure this is from main.js calling fetchNeighbors then fetchCuisine.  I guess I could have the first function
-    //return a promise?
-
-    //huh, apparently my restaurants.length thing isn't working?  That's apparently also true if the database hasn't opened yet???
-    //***That's just on the initial load EVEN IF there's already a database.  Which is weird...
-    //so my guess is that closing the browser and revisiting when the server isn't running = data from the database won't be displayed
-    //because it will think it doesn't exist for some reason.  Hmmm.
-    //That's weird:  closing incognito window and then opening again = the database was EMPTY.  ???
-    //...It doesn't persist but Cache does through a closed browser?  
-    //Hmmm, must be so!  Database persisted in a normal browser tab, and correctly pulled from that database.
-
-    //Otherwise, I think this is working!  Just sillily inefficient (requesting data from the database multiple times)
-
-    //super laggy sometimes when going to individual restaurant page.  Not sure what it's waiting for.  Can the databse open
-    //happen sooner/faster?  ALSO super laggy when coming back to the main page.  Database operation must be really slow?
-    //**It's when the message from the service worker isn't received.  Then the timeout takes really long to happen...
-    //I guess I could shorten the timeout length.  But... I think the opendatabase thing is just slow
-
-    //well, here's what I want it do:  grab entries from database if it exists (and they're in there), otherwise go to network
-    dbPromise.then(function(db) {
-      //grab the JSON data from the database
-      console.log('looking at potential data from database');
-      let store = db.transaction(DB_OBJ_STORE).objectStore(DB_OBJ_STORE);
-
-      //store.getAll is a promise that resolves to an array, length 0 if no entries
-      store.getAll().then(function(restaurants) {
-        if (restaurants.length === 0) {  //no data in the database, so fetch from network (and save to database)
-          fetch(DBHelper.DATABASE_URL + 'restaurants').then(function(response) {
-            console.log('requesting json from server');
-            if (response.status === 200) {
-              response.json().then(function(json) {
-                //do I have to clone something here?
-                //now have the restaurant data, so first store it in the database.  Then return it to whatever asked for it.
-                DBHelper.saveDataToDatabase(db, json);
-                callback(null, json);
-              });
-            }
-          }).catch(function(err) {
-            console.log('This error in going to network in fetchRestaurants: ' + err);
-            callback(err, null);
-          });
-        }
-        else { //already have data, so just return it from the database
-          console.log('returning data from database:');
-          console.log(restaurants);
-
-          callback(null, restaurants);
-
-          //can there be an error here?  No, I think you'd place a catch after the store.getAll()'s .then if there was a problem
-          //in the database
-        }
-      });
-    });
-  }
 
 }`
