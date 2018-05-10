@@ -28,9 +28,8 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
-  //I think you need to check for origin here?:
-  event.respondWith(
-    caches.match(event.request).then(function(response) {
+  event.respondWith(  //ignore search is to ignore the ?=id## part of the url for the subpages ( https://developers.google.com/web/ilt/pwa/caching-files-with-service-worker )
+    caches.match(event.request, { ignoreSearch: true}).then(function(response) {
       if (response) {  //return cache match
         return response;
       }
