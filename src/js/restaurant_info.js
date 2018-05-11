@@ -23,7 +23,7 @@ class Model {
   addUrlsToRestaurants() {
     this._arrRestaurants.map(function(element) {
       element.imgUrl = `/img/${element.photograph}`;
-      //element.url = `./restaurant.html?id=${element.id}`;
+      //element.url = `./restaurant.html?id=${element.id}`;  //not used on this page
     });
   }
 
@@ -37,7 +37,7 @@ class Model {
 
   getCurrentRestaurant() {
     const self = this;
-    return self._arrRestaurants.find(restaurant => restaurant.id == self._currentId);  //test this without self to see arrow function 'this' stuff
+    return self._arrRestaurants.find(restaurant => restaurant.id == self._currentId);
   }
 }
 
@@ -190,7 +190,7 @@ class View {
   /*** Google Map Related ***/
 
   /**
-   * Initialize Google map
+   * Initialize Google map and marker
    */
   initMap() {
     const self = this;
@@ -201,7 +201,7 @@ class View {
     });
     self._mapDiv.setAttribute("style","height:400px");
 
-    //add the marker  (does creating it place it on the map?)
+    //add the marker
     const marker = new google.maps.Marker({
       position: this._displayedRestaurant.latlng,
       title: this._displayedRestaurant.name,
@@ -210,6 +210,9 @@ class View {
     });
   }
 
+  /*
+   * User input now determines whether Google Map displays or not
+   */
   enableButton() {
     this._showMapBtn.innerText = "Show Google Maps";
     this._showMapBtn.disabled = false;
@@ -305,16 +308,9 @@ class Controller {
     }
   }
 
-//controller:
-//open the database
-//fetch all the JSON data (either from database or network), give to model
-    //service worker and have it start caching data  (unless, would waiting to do this later speed up initial page load?)
-//add new properties to each restaurant in the model
-//obtain the data for the select fields
-  //all data now obtained
-//fill select fields
-//get filtered restaurants from the model with data from view's getSelectedOption(selectField), pass to view's setDisplayedRestaurants
-//handle map stuff, adding markers
+  /*
+   * Have the controller coordinate everything (fetching model data, updating view)
+   */
   loadContent() {
     const self = this;
     self.fetchRestaurantData().then(function(json) {
@@ -340,4 +336,7 @@ document.addEventListener('DOMContentLoaded', function(event) {
   controller = new Controller();
 
   controller.loadContent();
+
+  //NOT registering service worker on this subpage since user will have come from main page
+  //If direct visits to the subpage are allowed, then would need to add that here
 });

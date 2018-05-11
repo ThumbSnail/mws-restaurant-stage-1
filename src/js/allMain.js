@@ -88,7 +88,6 @@ class Model {
 /*** View ***/
 class View {
   constructor() {
-    /*** HTML Elements ***/
     /*** Select Fields ***/
     this._neighborhoodSelect = document.getElementById('neighborhoods-select');
     this._cuisineSelect = document.getElementById('cuisines-select');
@@ -106,7 +105,6 @@ class View {
 
   /*** Select Field Related ***/
 
-  /*controller will call this function, passing in the data returned from the model:*/
   /*
    * Arguments:
    * selectField = which field to fill (view._neighborhoodSelect or view._cuisineSelect)
@@ -146,7 +144,7 @@ class View {
     strName = strName.replace('/img/', '').replace('.jpg', '');
     strName = '/img/' + strName + '-2x.jpg';
     image.src = strName;
-    //image.srcset = strName + ' 2x';  //serviceworker renders this pointless
+    //image.srcset = strName + ' 2x';  //serviceworker caches largest photo initially,rendering srcset pointless
     image.alt = restaurant.name;
     li.append(image);
 
@@ -209,7 +207,6 @@ class View {
   }
 
   createMapMarker(restaurant) {
-
     const marker = new google.maps.Marker({
       position: restaurant.latlng,
       title: restaurant.name,
@@ -244,15 +241,27 @@ class View {
     });
   }
 
+  /*
+   *  Used when, if there's a shown map, when user filters results, the map markers update also
+   */
   getIsMapDisplayed() {
     return this._isMapDisplayed;
   }
 
+  /*
+   * Google Maps is INCREDIBLY SLOW on 3G networks in the Lighthouse audits
+   * Thus, I leave it up to the user to decide if they want a map to show or not
+   * Once the model data has been fetched and the Google Maps script has downloaded,
+   * the "Show Google Maps" button becomes enabled on the site.
+  */
   enableButton() {
     this._showMapBtn.innerText = "Show Google Maps";
     this._showMapBtn.disabled = false;
   }
 
+  /*
+   * Upon user button press
+   */
   showMap() {
     this.initMap();
     this.addMarkersToMap();
@@ -340,7 +349,7 @@ class Controller {
     this._numReadyForMapCalls++;
 
     if (this._numReadyForMapCalls === this._MAX_READYFORMAP_CALLS) {
-      /* Now handled in button
+      /* Now handled in button upon user input
       view.initMap();
       view.addMarkersToMap();
       */
@@ -367,17 +376,9 @@ class Controller {
     });
   }
 
-
-//controller:
-//open the database
-//fetch all the JSON data (either from database or network), give to model
-    //service worker and have it start caching data  (unless, would waiting to do this later speed up initial page load?)
-//add new properties to each restaurant in the model
-//obtain the data for the select fields
-  //all data now obtained
-//fill select fields
-//get filtered restaurants from the model with data from view's getSelectedOption(selectField), pass to view's setDisplayedRestaurants
-//handle map stuff, adding markers
+  /*
+   * Have the controller coordinate everything (fetching model data, updating view)
+   */
   loadSite() {
     const self = this;
     self.fetchRestaurantData().then(function(json) {
@@ -396,26 +397,6 @@ class Controller {
     });
   }
 }
-
-//add some more comments to code
-
-//removing the map = performance rating of 92.
-
-//Map needs to be moved to bottom of screen, especially for mobile (and then don't draw it until in view)
-//But would that really fix it?  The map is just SO SLOW.  I think you'll have to have a button / ask the user
-//if they want to view a map.  Otherwise, it's just going to load way too slowly.
-
-//I don't think you have to cache much early on now, just the index.html?  Once you get the JSON, then fetch requests are made for the images
-//**but the issue is that the service worker doesn't exist on the first install, right?  
-//so it can only prevent network fetch requests later on and NOT intercept the first ones...
-//will clients.claim() help in the activate event?
-  //^Nope.  Serviceworker is just too slow.  I can't believe there's no way to NOT download the most giant-sized pictures... too bad.
-
-//Huh, the project notes make it seem like IndexedDB should go through the serviceworker...?
-//https://developers.google.com/web/ilt/pwa/live-data-in-the-service-worker
-//That makes no sense.  How can you "be able to visit any page you've seen" when the serviceworker doesn't take effect until
-//a 2nd visit?
-
 
 /*** Load the Page ***/
 
