@@ -308,6 +308,16 @@ class Controller {
     }
   }
 
+  registerServiceWorker() {
+    if (!navigator.serviceWorker) return;
+
+    navigator.serviceWorker.register('/sw.js').then(function(registration) {
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }, function(err) {
+      console.log('ServiceWorker registration failed: ', err);
+    });
+  }
+
   /*
    * Have the controller coordinate everything (fetching model data, updating view)
    */
@@ -335,8 +345,6 @@ document.addEventListener('DOMContentLoaded', function(event) {
   view = new View();
   controller = new Controller();
 
+  controller.registerServiceWorker();  //register serviceworker on this subpage in case user visited the subpage directly and didn't come via the main page
   controller.loadContent();
-
-  //NOT registering service worker on this subpage since user will have come from main page
-  //If direct visits to the subpage are allowed, then would need to add that here
 });
