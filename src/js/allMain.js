@@ -141,11 +141,19 @@ class View {
     const image = document.createElement('img');
     image.className = 'restaurant-img';
     let strName = restaurant.imgUrl;
-    strName = strName.replace('/img/', '').replace('.jpg', '');
-    strName = '/img/' + strName + '-2x.jpg';
+
+    //add error handling in case server doesn't have an image:
+    if (strName === '/img/undefined') {
+      strName = '/img/generic.png';
+      image.alt = "Generic Restaurant Placeholder Image";
+    }
+    else {
+      strName = strName.replace('/img/', '').replace('.jpg', '');
+      strName = '/img/' + strName + '-2x.jpg';
+      image.alt = restaurant.name;
+    }
     image.src = strName;
     //image.srcset = strName + ' 2x';  //serviceworker caches largest photo initially,rendering srcset pointless
-    image.alt = restaurant.name;
     li.append(image);
 
     const name = document.createElement('h3');
