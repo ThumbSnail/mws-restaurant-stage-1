@@ -28,6 +28,16 @@ class Model {
     });
   }
 
+  toggleRestaurantFavorite(restaurantId) {
+    restaurantId--;  //id label is one more than the index value
+    this._arrRestaurants[restaurantId].is_favorite = !this._arrRestaurants[restaurantId].is_favorite;
+  }
+
+  getRestaurantFavorite(restaurantId) {
+    restaurantId--;  //id label is one more than the index value
+    return this._arrRestaurants[restaurantId].is_favorite;
+  }
+
   /*
    * Arguments:
    * propertyName = the property in the Restaurant object that corresponds to the desired select filter,
@@ -77,8 +87,14 @@ class Model {
     latling: obj {lat: float, lng: float}
     cuisine_type: string
     operating_hours: obj {Monday: string, Tuesday: string, ..., Sunday: string}
-    reviews: array of review objects
-          review: obj {name: string, date: string, rating: int, comments: string}
+      // !!This was removed in the server update:
+      //reviews: array of review objects
+      //    review: obj {name: string, date: string, rating: int, comments: string}
+
+    //new added from server:
+    createdAt:  number for time
+    is_favorite: boolean
+    updatedAt:  number for time
 
     Model adds:
     imgUrl: string
@@ -169,6 +185,7 @@ class View {
     li.append(address);
 
     const div_container = document.createElement('div');
+    div_container.className = "button-container";
     li.append(div_container);
 
     const more = document.createElement('a');
@@ -176,6 +193,20 @@ class View {
     more.href = restaurant.url;
     more.setAttribute('aria-label', 'View details about ' + restaurant.name);
     div_container.append(more);
+
+    const favButton = document.createElement('input');
+    favButton.type = "image";
+    favButton.id = "toggle-" + restaurant.id;
+    favButton.src = "/img/blankStar.svg";
+    favButton.alt = "Toggle favorite for " + restaurant.name;  //https://www.w3.org/WAI/tutorials/images/functional/#image-used-in-a-button
+    favButton.className = "toggle-favorite";
+    if (restaurant.is_favorite) {
+      favButton.src = "/img/favStar.svg";
+    }
+    favButton.onclick = function() {
+      controller.toggleFavorite(restaurant.id);
+    };
+    div_container.append(favButton);
 
     return li;
   }
@@ -195,6 +226,16 @@ class View {
     this._displayedRestaurants.forEach(function(restaurant) {
       this._restaurantsList.append(this.createRestaurantHTML(restaurant));
     }, this);
+  }
+
+  updateToggleFavorite(restaurantId, isFavorite) {
+    let favButton = document.getElementById('toggle-' + restaurantId);
+    if (isFavorite) {
+      favButton.src = "/img/favStar.svg";
+    }
+    else {
+      favButton.src = "/img/blankStar.svg";
+    }
   }
 
   /*** Google Map Related ***/
@@ -292,6 +333,15 @@ class Controller {
     /*** For Google Maps ***/
     this._MAX_READYFORMAP_CALLS = 2;
     this._numReadyForMapCalls= 0;
+  }
+
+
+  toggleFavorite(restaurantId) {
+    //update the model
+    model.toggleRestaurantFavorite(restaurantId);
+    //update the view
+    view.updateToggleFavorite(restaurantId, model.getRestaurantFavorite(restaurantId));
+    //update the database/server
   }
 
   /*** IndexedDB Related ***/
