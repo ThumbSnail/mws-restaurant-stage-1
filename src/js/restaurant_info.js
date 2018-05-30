@@ -39,6 +39,16 @@ class Model {
     const self = this;
     return self._arrRestaurants.find(restaurant => restaurant.id == self._currentId);
   }
+
+  toggleRestaurantFavorite(restaurantId) {
+    restaurantId--;  //id label is one more than the index value
+    this._arrRestaurants[restaurantId].is_favorite = !this._arrRestaurants[restaurantId].is_favorite;
+  }
+
+  getRestaurantFavorite(restaurantId) {
+    restaurantId--;  //id label is one more than the index value
+    return this._arrRestaurants[restaurantId].is_favorite;
+  }
 }
 
   /*** Restaurant Object
@@ -83,6 +93,17 @@ class View {
   fillRestaurantHTML() {
     const name = document.getElementById('restaurant-name');
     name.innerHTML = this._displayedRestaurant.name;
+
+    const favButton = document.getElementById('toggle-');
+    favButton.id = "toggle-" + this._displayedRestaurant.id;
+    favButton.alt = "Toggle favorite for " + this._displayedRestaurant.name;  //https://www.w3.org/WAI/tutorials/images/functional/#image-used-in-a-button
+    favButton.className = "toggle-favorite";
+    if (this._displayedRestaurant.is_favorite) {
+      favButton.src = "/img/favStar.svg";
+    }
+    favButton.onclick = function() {
+      controller.toggleFavorite();
+    };
 
     const address = document.getElementById('restaurant-address');
     address.innerHTML = this._displayedRestaurant.address;
@@ -187,6 +208,16 @@ class View {
     breadcrumb.appendChild(li);
   }
 
+  updateToggleFavorite() {
+    let favButton = document.getElementById('toggle-' + this._displayedRestaurant.id);
+    if (this._displayedRestaurant.is_favorite) {
+      favButton.src = "/img/favStar.svg";
+    }
+    else {
+      favButton.src = "/img/blankStar.svg";
+    }
+  }
+
   /*** Google Map Related ***/
 
   /**
@@ -239,6 +270,14 @@ class Controller {
     /*** For Google Maps ***/
     this._MAX_READYFORMAP_CALLS = 2;
     this._numReadyForMapCalls= 0;
+  }
+
+  toggleFavorite() {
+    //update the model
+    model.toggleRestaurantFavorite(model.getCurrentRestaurant().id);
+    //update the view
+    view.updateToggleFavorite();
+    //update the database/server
   }
 
   /*** IndexedDB Related ***/
