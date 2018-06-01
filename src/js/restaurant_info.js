@@ -88,6 +88,7 @@ class View {
     this._showMapBtn = document.getElementById('show-map');
 
     this._displayedRestaurant = '';
+    this._formContainer = document.getElementById('form-container');
   }
 
   /*** Restaurant Entry Related ***/
@@ -162,9 +163,6 @@ class View {
    */
   fillReviewsHTML(arrReviews) {
     const container = document.getElementById('reviews-container');
-    const title = document.createElement('h3');
-    title.innerHTML = 'Reviews';
-    container.appendChild(title);
 
     if (!arrReviews) {
       const noReviews = document.createElement('p');
@@ -226,6 +224,10 @@ class View {
     else {
       favButton.src = "/img/blankStar.svg";
     }
+  }
+
+  showReviewForm() {
+    this._formContainer.className = '';
   }
 
   /*** Google Map Related ***/
