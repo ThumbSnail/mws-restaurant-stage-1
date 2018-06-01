@@ -7,6 +7,7 @@ class Model {
   constructor() {
     this._arrRestaurants = [];  //all restaurants will already be in the database, so just use same code
     this._currentId = this.extractIdFromURL();
+    this._currentReviews = '';
   }
 
   /*
@@ -15,6 +16,10 @@ class Model {
   */
   addFetchedRestaurants(restaurants) {
     this._arrRestaurants = restaurants;
+  }
+
+  addFetchedReviews(reviews) {
+    this._currentReviews = reviews;
   }
 
   /*
@@ -38,6 +43,10 @@ class Model {
   getCurrentRestaurant() {
     const self = this;
     return self._arrRestaurants.find(restaurant => restaurant.id == self._currentId);
+  }
+
+  getCurrentReviews() {
+    return this._currentReviews;
   }
 
   toggleRestaurantFavorite(restaurantId) {
@@ -124,8 +133,6 @@ class View {
     if (this._displayedRestaurant.operating_hours) {
       this.fillRestaurantHoursHTML();
     }
-    // fill reviews
-    this.fillReviewsHTML();
   }
 
   /**
@@ -153,20 +160,20 @@ class View {
   /**
    * Create all reviews HTML and add them to the webpage.
    */
-  fillReviewsHTML() {
+  fillReviewsHTML(arrReviews) {
     const container = document.getElementById('reviews-container');
     const title = document.createElement('h3');
     title.innerHTML = 'Reviews';
     container.appendChild(title);
 
-    if (!this._displayedRestaurant.reviews) {
+    if (!arrReviews) {
       const noReviews = document.createElement('p');
       noReviews.innerHTML = 'No reviews yet!';
       container.appendChild(noReviews);
       return;
     }
     const ul = document.getElementById('reviews-list');
-    this._displayedRestaurant.reviews.forEach(review => {
+    arrReviews.forEach(review => {
       ul.appendChild(this.createReviewHTML(review));  //see if the this here works
     });
     container.appendChild(ul);
@@ -182,7 +189,10 @@ class View {
     li.appendChild(name);
 
     const date = document.createElement('p');
-    date.innerHTML = review.date;
+    //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date
+    let dateObj = new Date(review.createdAt);
+    let strDate = dateObj.getMonth() + '/' + dateObj.getDate() + '/' + dateObj.getFullYear();
+    date.innerHTML = strDate;
     li.appendChild(date);
 
     const rating = document.createElement('p');
@@ -330,6 +340,34 @@ class Controller {
     });
   }
 
+  fetchReviewData(restaurantId) {  //separate database?
+    self = this;
+
+    /*//First, check the database
+    return self._dbPromise.then(function(db) {
+      let store = db.transaction(self._DB_OBJ_STORE).objectStore(self._DB_OBJ_STORE);
+      return store.getAll().then(function(arrRestaurants) {
+        if (arrRestaurants.length === 0) {*/  //no data in the database, so fetch from network (and save to database)
+          return fetch(self._DATABASE_URL + 'reviews/?restaurant_id=' + restaurantId).then(function(response) {
+            console.log('requesting json from server');
+            if (response.status === 200) {
+              return response.json().then(function(json) {  //store data in the database and return it to what asked for it
+                /*self.saveToDatabase(db, json);*/
+                return json;
+              });
+            }
+          }).catch(function(err) {
+            console.log('This error in going to network in fetchNetworkJSON: ' + err);
+          });
+        /*}
+        else { //already have the data so just return the array of restaurants from the database
+          console.log('Returning data from database.');
+          return arrRestaurants;
+        }
+      });
+    });*/
+  }
+
   /*
    * I only want the Google Map to display (and have markers added) if and after:
    *  1.  The Google Map callback has fired (calling controller.mapCallback)
@@ -373,6 +411,14 @@ class Controller {
       view.fillBreadcrumb();
 
       self.readyForMap();
+    });
+
+    self.fetchReviewData(model.extractIdFromURL()).then(function(json) {
+      /*** Model Related ***/
+      model.addFetchedReviews(json);
+
+      /*** View Related ***/
+      view.fillReviewsHTML(json);
     });
   }
 }
