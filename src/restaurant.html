@@ -51,7 +51,7 @@
     <section id="reviews">
       <div class="user-input">
         <h3>Reviews:</h3>
-        <button class="add-review" onclick="view.showReviewForm()">Add Your Review</button>
+        <button id="btn-review" class="add-review" onclick="view.showReviewForm()">Add Your Review</button>
       </div>
       <div id="form-container" class="hidden-form">
         <!--https://www.w3.org/TR/wai-aria-practices/examples/landmarks/form.html-->
@@ -66,9 +66,9 @@
             <input id="form-rating" type="text">
 
             <label for="form-comments">Comments</label>
-            <input id="form-comments" type="text">
+            <textarea id="form-comments"></textarea>
 
-            <input type="submit" value="Submit Review">
+            <input id="submit-button" type="submit" value="Submit Review">
 
           </fieldset>
         </form>

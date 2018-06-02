@@ -228,6 +228,7 @@ class View {
 
   showReviewForm() {
     this._formContainer.className = '';
+    document.getElementById('btn-review').className = 'hidden-form';
   }
 
   /*** Google Map Related ***/

@@ -318,6 +318,55 @@ nav h1 a {
 .hidden-form {
   display: none;
 }
+#form-container {
+  background-color: #125382;
+}
+form {
+  color: white;
+  font-size: 1rem;
+  font-weight: normal;
+  line-height: 1;
+}
+form input {
+  width: 100%;
+  margin: 5px 0px 15px 0px;
+  height: 32px;
+  font-size: 1rem;
+}
+form input:focus {
+  outline: 4px solid #7D2200;
+}
+textarea {
+  width: 100%;
+  margin: 5px 0px 15px 0px;
+  height: 200px;
+  font-size: 1rem;
+}
+textarea:focus {
+  outline: 4px solid #7D2200;
+}
+fieldset {
+  padding: 20px;
+  border-color: #fff;
+  border-style: solid;
+}
+#submit-button {
+  display: block;
+  width: 200px;
+  background-color: white;
+  font-family: Arial,sans-serif;
+  font-size: 16pt;
+  line-height: 1.2em;
+  height: 48px;
+  letter-spacing: 0;
+  margin: 0;
+  border-radius: 4%;
+  box-shadow: 1px 3px 5px #222;
+  margin: auto;
+}
+#submit-button:focus {
+  outline: 4px solid #7D2200;
+}
 #reviews-container h3 {
   color: #7D2200;
   font-size: 24pt;
@@ -415,6 +464,14 @@ nav h1 a {
 @media screen and (min-width: 650px) {  /*So that when the table wraps to same row as image there's more space in between*/
   #restaurant-hours {
     padding: 0 20px 0 20px;
+  }
+}
+@media screen and (min-width: 804px) {  /*So that when the table wraps to same row as image there's more space in between*/
+  form input {
+    width: 36%;
+  }
+  form input:first-of-type {
+    margin: 5px 10px 15px 0;
   }
 }
 @media screen and (min-width: 1100px) {
