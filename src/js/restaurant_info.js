@@ -63,6 +63,11 @@ class Model {
   addReview(reviewObj) {
     this._arrRestaurants[this._currentId - 1].reviews.push(reviewObj);
   }
+
+  replaceLastReview(reviewObj) {
+    this._arrRestaurants[this._currentId - 1].reviews.pop();
+    this._arrRestaurants[this._currentId - 1].reviews.push(reviewObj);
+  }
 }
 
   /*** Restaurant Object
@@ -318,6 +323,7 @@ class Controller {
   }
 
   toggleFavorite() {
+    let self = this;
     let restaurant = model.getCurrentRestaurant();
     //update the model
     model.toggleRestaurantFavorite(restaurant.id);
@@ -331,9 +337,20 @@ class Controller {
     });
 
     //update the server
+    self.putFavorite(changedRestaurant[0].id, changedRestaurant[0].is_favorite);
+  }
+
+  putFavorite(id, boolFav) {
+    fetch(this._DATABASE_URL + 'restaurants/' + id + '/?is_favorite=' + boolFav, { method: 'PUT'})
+      .then(function(response) {
+        //nothing for now
+      }).catch(function(error) {
+        console.log('Error in favorite toggle: ' + error);
+      });
   }
 
   submitReview() {
+    let self = this;
     //update model
     let reviewObj = view.getFormValues();
     //have:  name, rating, comments
@@ -356,12 +373,34 @@ class Controller {
     });
 
     //update server
-
+    self.postReview(reviewObj);
     //hide the form entry
     view.hideReviewForm();
+  }
 
-    //!!weird, submitting the form refreshes the page... but at a bizarre url:  http://localhost:8000/restaurant.html
-    // Why?  
+  postReview(reviewObj) {
+    fetch(this._DATABASE_URL + 'reviews/', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify(reviewObj)
+      }).then(function(response) {
+        //in this app's current state, this ends up being unnecessary:
+        /*if (response.status >= 200  && response.status < 300) {  //success
+          response.json().then(function(updatedReview) {
+            //server may have assigned a different id or creation time; thus, update the model accordingly
+            model.replaceLastReview(updatedReview);
+            //update the database to reflect this change:
+            let changedRestaurant = [];  //saveToDatabase expects an array, so give it one
+            changedRestaurant.push(model.getCurrentRestaurant());
+            self._dbPromise.then(function(db) {
+              self.saveToDatabase(db, changedRestaurant);
+            });
+          });
+        }*/
+      }).catch(function(error) {
+        console.log('Error in posting review: ' + error);
+        
+      });
   }
 
   /*** IndexedDB Related ***/

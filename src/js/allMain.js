@@ -440,6 +440,7 @@ class Controller {
   }
 
   toggleFavorite(restaurantId) {
+    let self = this;
     //update the model
     model.toggleRestaurantFavorite(restaurantId);
     //update the view
@@ -450,6 +451,18 @@ class Controller {
     self._dbPromise.then(function(db) {
       self.saveToDatabase(db, changedRestaurant);
     });
+
+    //update the server
+    self.putFavorite(changedRestaurant[0].id, changedRestaurant[0].is_favorite);
+  }
+
+  putFavorite(id, boolFav) {
+    fetch(this._DATABASE_URL + 'restaurants/' + id + '/?is_favorite=' + boolFav, { method: 'PUT'})
+      .then(function(response) {
+        //nothing for now
+      }).catch(function(error) {
+        console.log('Error in favorite toggle: ' + error);
+      });
   }
 
   registerServiceWorker() {
