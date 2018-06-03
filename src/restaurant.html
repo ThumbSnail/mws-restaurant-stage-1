@@ -55,7 +55,8 @@
       </div>
       <div id="form-container" class="hidden-form">
         <!--https://www.w3.org/TR/wai-aria-practices/examples/landmarks/form.html-->
-        <form id="main-form" aria-labelledby="form-review">
+        <form id="main-form" aria-labelledby="form-review" onsubmit="return false">
+          <!--^The "return false" via:  https://stackoverflow.com/questions/19454310/stop-form-refreshing-page-on-submit-->
           <fieldset>
             <legend id="form-review">Add Your Review</legend>
 
@@ -68,7 +69,7 @@
             <label for="form-comments">Comments</label>
             <textarea id="form-comments"></textarea>
 
-            <input id="submit-button" type="submit" value="Submit Review">
+            <input id="submit-button" type="submit" value="Submit Review" onclick="controller.submitReview()">
 
           </fieldset>
         </form>

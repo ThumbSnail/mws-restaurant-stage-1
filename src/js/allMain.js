@@ -373,9 +373,28 @@ class Controller {
           return fetch(self._DATABASE_URL + 'restaurants').then(function(response) {
             console.log('requesting json from server');
             if (response.status === 200) {
-              return response.json().then(function(json) {  //store data in the database and return it to what asked for it
-                self.saveToDatabase(db, json);
-                return json;
+              return response.json().then(function(restaurants) {  //store data in the database and return it to what asked for it
+                //for each restaraunt, add a reviews property with a blank array
+                restaurants.forEach(function(restaurantObject, index) {
+                  restaurantObject.reviews = [];
+                  restaurants[index] = restaurantObject;
+                });
+
+                // now also grab the review data for each restaurant (so that any page can be accessed with full details offline upon first vist)
+                return fetch(self._DATABASE_URL + 'reviews').then(function(response) {
+                  if (response.status === 200) {
+                    return response.json().then(function(reviews) {
+                      //for each review, get its restaurant id and push that review in the right restaurant's reviews array
+                      reviews.forEach(function(reviewObject) {
+                        //restaurant_id is off the array index by 1, so subtract 1
+                        restaurants[reviewObject.restaurant_id - 1].reviews.push(reviewObject);
+                      });
+
+                      self.saveToDatabase(db, restaurants);
+                      return restaurants;
+                    });
+                  }
+                });
               });
             }
           }).catch(function(err) {

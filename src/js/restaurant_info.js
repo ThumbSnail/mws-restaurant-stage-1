@@ -7,7 +7,6 @@ class Model {
   constructor() {
     this._arrRestaurants = [];  //all restaurants will already be in the database, so just use same code
     this._currentId = this.extractIdFromURL();
-    this._currentReviews = '';
   }
 
   /*
@@ -16,10 +15,6 @@ class Model {
   */
   addFetchedRestaurants(restaurants) {
     this._arrRestaurants = restaurants;
-  }
-
-  addFetchedReviews(reviews) {
-    this._currentReviews = reviews;
   }
 
   /*
@@ -45,10 +40,6 @@ class Model {
     return self._arrRestaurants.find(restaurant => restaurant.id == self._currentId);
   }
 
-  getCurrentReviews() {
-    return this._currentReviews;
-  }
-
   toggleRestaurantFavorite(restaurantId) {
     restaurantId--;  //id label is one more than the index value
     this._arrRestaurants[restaurantId].is_favorite = !this._arrRestaurants[restaurantId].is_favorite;
@@ -57,6 +48,20 @@ class Model {
   getRestaurantFavorite(restaurantId) {
     restaurantId--;  //id label is one more than the index value
     return this._arrRestaurants[restaurantId].is_favorite;
+  }
+
+  //total up the number of reviews in the model, that will be the index needed for a newly added review
+  getNextReviewIndex() {
+    let count = 0;
+    this._arrRestaurants.forEach(function(restaurant) {
+      count += restaurant.reviews.length;
+    });
+
+    return count;
+  }
+
+  addReview(reviewObj) {
+    this._arrRestaurants[this._currentId - 1].reviews.push(reviewObj);
   }
 }
 
@@ -88,7 +93,12 @@ class View {
     this._showMapBtn = document.getElementById('show-map');
 
     this._displayedRestaurant = '';
+
+    /*** Form ***/
     this._formContainer = document.getElementById('form-container');
+    this._userName = document.getElementById('form-name');
+    this._userRating = document.getElementById('form-rating');
+    this._userComments = document.getElementById('form-comments');
   }
 
   /*** Restaurant Entry Related ***/
@@ -134,6 +144,8 @@ class View {
     if (this._displayedRestaurant.operating_hours) {
       this.fillRestaurantHoursHTML();
     }
+
+    this.fillReviewsHTML()
   }
 
   /**
@@ -161,17 +173,21 @@ class View {
   /**
    * Create all reviews HTML and add them to the webpage.
    */
-  fillReviewsHTML(arrReviews) {
+  fillReviewsHTML(newReview) {
+    const ul = document.getElementById('reviews-list');
+    if (newReview) {
+      ul.appendChild(this.createReviewHTML(newReview));
+      return;
+    }
     const container = document.getElementById('reviews-container');
 
-    if (!arrReviews) {
+    if (!this._displayedRestaurant.reviews) {
       const noReviews = document.createElement('p');
       noReviews.innerHTML = 'No reviews yet!';
       container.appendChild(noReviews);
       return;
     }
-    const ul = document.getElementById('reviews-list');
-    arrReviews.forEach(review => {
+    this._displayedRestaurant.reviews.forEach(review => {
       ul.appendChild(this.createReviewHTML(review));  //see if the this here works
     });
     container.appendChild(ul);
@@ -226,9 +242,25 @@ class View {
     }
   }
 
+  /*** Form Related ***/
+
   showReviewForm() {
     this._formContainer.className = '';
     document.getElementById('btn-review').className = 'hidden-form';
+  }
+
+  hideReviewForm() {
+    this._formContainer.className = 'hidden-form';
+    document.getElementById('btn-review').className = '';
+  }
+
+  getFormValues() {
+    let formObj = {};
+    formObj.name = this._userName.value;
+    formObj.rating = this._userRating.value;
+    formObj.comments = this._userComments.value;
+
+    return formObj;
   }
 
   /*** Google Map Related ***/
@@ -291,12 +323,45 @@ class Controller {
     model.toggleRestaurantFavorite(restaurant.id);
     //update the view
     view.updateToggleFavorite();
-    //update the database/server
+    //update the database
     let changedRestaurant = [];  //saveToDatabase expects an array, so give it one
     changedRestaurant.push(restaurant);
     self._dbPromise.then(function(db) {
       self.saveToDatabase(db, changedRestaurant);
     });
+
+    //update the server
+  }
+
+  submitReview() {
+    //update model
+    let reviewObj = view.getFormValues();
+    //have:  name, rating, comments
+    //need:  restaurant_id, id (for the review), createdAt (time), updatedAt (time)
+    reviewObj.restaurant_id = model._currentId;
+    reviewObj.id = model.getNextReviewIndex();
+    reviewObj.createdAt = new Date().getTime();
+    reviewObj.updatedAt = reviewObj.createdAt;  //is this meant to be when it successfully goes to the server?  (or in theory a user should be able to edit their review?)
+
+    model.addReview(reviewObj);
+
+    //update view
+    view.fillReviewsHTML(reviewObj);
+
+    //update database
+    let changedRestaurant = [];  //saveToDatabase expects an array, so give it one
+    changedRestaurant.push(model.getCurrentRestaurant());
+    self._dbPromise.then(function(db) {
+      self.saveToDatabase(db, changedRestaurant);
+    });
+
+    //update server
+
+    //hide the form entry
+    view.hideReviewForm();
+
+    //!!weird, submitting the form refreshes the page... but at a bizarre url:  http://localhost:8000/restaurant.html
+    // Why?  
   }
 
   /*** IndexedDB Related ***/
@@ -332,9 +397,28 @@ class Controller {
           return fetch(self._DATABASE_URL + 'restaurants').then(function(response) {
             console.log('requesting json from server');
             if (response.status === 200) {
-              return response.json().then(function(json) {  //store data in the database and return it to what asked for it
-                self.saveToDatabase(db, json);
-                return json;
+              return response.json().then(function(restaurants) {  //store data in the database and return it to what asked for it
+                //for each restaraunt, add a reviews property with a blank array
+                restaurants.forEach(function(restaurantObject, index) {
+                  restaurantObject.reviews = [];
+                  restaurants[index] = restaurantObject;
+                });
+
+                // now also grab the review data for each restaurant (so that any page can be accessed with full details offline upon first vist)
+                return fetch(self._DATABASE_URL + 'reviews').then(function(response) {
+                  if (response.status === 200) {
+                    return response.json().then(function(reviews) {
+                      //for each review, get its restaurant id and push that review in the right restaurant's reviews array
+                      reviews.forEach(function(reviewObject) {
+                        //restaurant_id is off the array index by 1, so subtract 1
+                        restaurants[reviewObject.restaurant_id - 1].reviews.push(reviewObject);
+                      });
+
+                      self.saveToDatabase(db, restaurants);
+                      return restaurants;
+                    });
+                  }
+                });
               });
             }
           }).catch(function(err) {
@@ -347,34 +431,6 @@ class Controller {
         }
       });
     });
-  }
-
-  fetchReviewData(restaurantId) {  //separate database?
-    self = this;
-
-    /*//First, check the database
-    return self._dbPromise.then(function(db) {
-      let store = db.transaction(self._DB_OBJ_STORE).objectStore(self._DB_OBJ_STORE);
-      return store.getAll().then(function(arrRestaurants) {
-        if (arrRestaurants.length === 0) {*/  //no data in the database, so fetch from network (and save to database)
-          return fetch(self._DATABASE_URL + 'reviews/?restaurant_id=' + restaurantId).then(function(response) {
-            console.log('requesting json from server');
-            if (response.status === 200) {
-              return response.json().then(function(json) {  //store data in the database and return it to what asked for it
-                /*self.saveToDatabase(db, json);*/
-                return json;
-              });
-            }
-          }).catch(function(err) {
-            console.log('This error in going to network in fetchNetworkJSON: ' + err);
-          });
-        /*}
-        else { //already have the data so just return the array of restaurants from the database
-          console.log('Returning data from database.');
-          return arrRestaurants;
-        }
-      });
-    });*/
   }
 
   /*
@@ -411,7 +467,7 @@ class Controller {
     const self = this;
     self.fetchRestaurantData().then(function(json) {
       /*** Model Related ***/
-      model.addFetchedRestaurants(json);
+      model.addFetchedRestaurants(json);  //this now handles getting all the reviews
       model.addUrlsToRestaurants();
 
       /*** View Related ***/
@@ -420,14 +476,6 @@ class Controller {
       view.fillBreadcrumb();
 
       self.readyForMap();
-    });
-
-    self.fetchReviewData(model.extractIdFromURL()).then(function(json) {
-      /*** Model Related ***/
-      model.addFetchedReviews(json);
-
-      /*** View Related ***/
-      view.fillReviewsHTML(json);
     });
   }
 }
