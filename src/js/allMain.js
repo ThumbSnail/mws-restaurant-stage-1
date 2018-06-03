@@ -462,8 +462,58 @@ class Controller {
         //nothing for now
       }).catch(function(error) {
         console.log('Error in favorite toggle: ' + error);
+        this.saveServerRequest('putFavorite', {restaurant_id: id, is_favorite: boolFav});
       });
   }
+
+  /*** this is mainly used in restaurant_info.js.  However, if user regains connection and there's a stored
+  server request to post a new review, then the main page may need to call this function***/
+  postReview(reviewObj) {
+    self = this;
+    fetch(self._DATABASE_URL + 'reviews/', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify(reviewObj)
+      }).then(function(response) {
+        //in this app's current state, this ends up being unnecessary:
+        /*if (response.status >= 200  && response.status < 300) {  //success
+          response.json().then(function(updatedReview) {
+            //server may have assigned a different id or creation time; thus, update the model accordingly
+            model.replaceLastReview(updatedReview);
+            //update the database to reflect this change:
+            let changedRestaurant = [];  //saveToDatabase expects an array, so give it one
+            changedRestaurant.push(model.getCurrentRestaurant());
+            self._dbPromise.then(function(db) {
+              self.saveToDatabase(db, changedRestaurant);
+            });
+          });
+        }*/
+      }).catch(function(error) {
+        console.log('Error in posting review: ' + error);
+        if(!navigator.onLine) {  //no internet connection currently, so add this new request to the queue of requests to make once the connection is regained
+          self.saveServerRequest('postReview', reviewObj);
+        }
+      });
+  }
+
+  /*** For storing server requests to try again once internet connection is reestablished ***/
+  //saving in local storage since user might regain internet on a different page from where connection was lost
+  saveServerRequest(functionToCall, dataToSend) {
+    let arrRequests = [];
+    if (localStorage.hasOwnProperty('serverRequests')) {
+      //then an array already exists, so grab it first
+      arrRequests = JSON.parse(localStorage.getItem('serverRequests'));
+    }
+
+    let objRequest = {
+      func: functionToCall,
+      data: dataToSend
+    };
+    arrRequests.push(objRequest);
+
+    //store in local storage to call later:
+    localStorage.setItem('serverRequests', JSON.stringify(arrRequests));
+  } 
 
   registerServiceWorker() {
     if (!navigator.serviceWorker) return;

@@ -346,6 +346,7 @@ class Controller {
         //nothing for now
       }).catch(function(error) {
         console.log('Error in favorite toggle: ' + error);
+        this.saveServerRequest('putFavorite', {restaurant_id: id, is_favorite: boolFav});
       });
   }
 
@@ -379,7 +380,8 @@ class Controller {
   }
 
   postReview(reviewObj) {
-    fetch(this._DATABASE_URL + 'reviews/', {
+    self = this;
+    fetch(self._DATABASE_URL + 'reviews/', {
         method: 'POST',
         headers: {'content-type': 'application/json'},
         body: JSON.stringify(reviewObj)
@@ -399,9 +401,30 @@ class Controller {
         }*/
       }).catch(function(error) {
         console.log('Error in posting review: ' + error);
-        
+        if(!navigator.onLine) {  //no internet connection currently, so add this new request to the queue of requests to make once the connection is regained
+          self.saveServerRequest('postReview', reviewObj);
+        }
       });
   }
+
+  /*** For storing server requests to try again once internet connection is reestablished ***/
+  //saving in local storage since user might regain internet on a different page from where connection was lost
+  saveServerRequest(functionToCall, dataToSend) {
+    let arrRequests = [];
+    if (localStorage.hasOwnProperty('serverRequests')) {
+      //then an array already exists, so grab it first
+      arrRequests = JSON.parse(localStorage.getItem('serverRequests'));
+    }
+
+    let objRequest = {
+      func: functionToCall,
+      data: dataToSend
+    };
+    arrRequests.push(objRequest);
+
+    //store in local storage to call later:
+    localStorage.setItem('serverRequests', JSON.stringify(arrRequests));
+  } 
 
   /*** IndexedDB Related ***/
 
