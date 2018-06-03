@@ -286,11 +286,17 @@ class Controller {
   }
 
   toggleFavorite() {
+    let restaurant = model.getCurrentRestaurant();
     //update the model
-    model.toggleRestaurantFavorite(model.getCurrentRestaurant().id);
+    model.toggleRestaurantFavorite(restaurant.id);
     //update the view
     view.updateToggleFavorite();
     //update the database/server
+    let changedRestaurant = [];  //saveToDatabase expects an array, so give it one
+    changedRestaurant.push(restaurant);
+    self._dbPromise.then(function(db) {
+      self.saveToDatabase(db, changedRestaurant);
+    });
   }
 
   /*** IndexedDB Related ***/

@@ -38,6 +38,11 @@ class Model {
     return this._arrRestaurants[restaurantId].is_favorite;
   }
 
+  getRestaurantById(restaurantId) {
+    restaurantId--;  //id label is one more than the index value
+    return this._arrRestaurants[restaurantId];
+  }
+
   /*
    * Arguments:
    * propertyName = the property in the Restaurant object that corresponds to the desired select filter,
@@ -335,15 +340,6 @@ class Controller {
     this._numReadyForMapCalls= 0;
   }
 
-
-  toggleFavorite(restaurantId) {
-    //update the model
-    model.toggleRestaurantFavorite(restaurantId);
-    //update the view
-    view.updateToggleFavorite(restaurantId, model.getRestaurantFavorite(restaurantId));
-    //update the database/server
-  }
-
   /*** IndexedDB Related ***/
 
   openDatabase() {
@@ -422,6 +418,19 @@ class Controller {
     if (view.getIsMapDisplayed()) {
       view.updateDisplayedMapMarkers();
     }
+  }
+
+  toggleFavorite(restaurantId) {
+    //update the model
+    model.toggleRestaurantFavorite(restaurantId);
+    //update the view
+    view.updateToggleFavorite(restaurantId, model.getRestaurantFavorite(restaurantId));
+    //update the database
+    let changedRestaurant = [];  //saveToDatabase expects an array, so give it one
+    changedRestaurant.push(model.getRestaurantById(restaurantId));
+    self._dbPromise.then(function(db) {
+      self.saveToDatabase(db, changedRestaurant);
+    });
   }
 
   registerServiceWorker() {
