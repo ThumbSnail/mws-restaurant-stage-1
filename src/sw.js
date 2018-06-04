@@ -3,6 +3,7 @@ const URLS_TO_CACHE = [
   '/',
   '/restaurant.html',
   '/css/styles.css',
+  '/css/stylesSub.css',
   '/js/allMain.js',
   '/js/idb.js',
   '/js/restaurant_info.js',
