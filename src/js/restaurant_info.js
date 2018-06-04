@@ -109,10 +109,10 @@ class View {
 
   displayOfflineMessage(boolShow) {
     if (boolShow) {
-      this._offlineMessage.className = '';
+      this._offlineMessage.hidden = false;
     }
     else {
-      this._offlineMessage.className = 'hidden-form';
+      this._offlineMessage.hidden = true;
     }
   }
 
@@ -499,10 +499,6 @@ class Controller {
 
                 // now also grab the review data for each restaurant (so that any page can be accessed with full details offline upon first vist)
                 return fetch(self._DATABASE_URL + 'reviews').then(function(response) {
-
-                  // !!! The server has a cool bug where the above GET endpoint does NOT return newly added reviews... !!!
-                  // have to check the restaurant_id specific review endpoint to see the reviews get updated on the server...
-
                   if (response.status === 200) {
                     return response.json().then(function(reviews) {
                       //for each review, get its restaurant id and push that review in the right restaurant's reviews array
