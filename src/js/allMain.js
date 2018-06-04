@@ -122,6 +122,16 @@ class View {
     this._showMapBtn = document.getElementById('show-map');
 
     this._displayedRestaurants = [];  //which restaurants are currently displayed
+    this._offlineMessage = document.getElementById('offline-message');
+  }
+
+  displayOfflineMessage(boolShow) {
+    if (boolShow) {
+      this._offlineMessage.className = '';
+    }
+    else {
+      this._offlineMessage.className = 'hidden-form';
+    }
   }
 
   /*** Select Field Related ***/
@@ -382,6 +392,10 @@ class Controller {
 
                 // now also grab the review data for each restaurant (so that any page can be accessed with full details offline upon first vist)
                 return fetch(self._DATABASE_URL + 'reviews').then(function(response) {
+
+                  // !!! The server has a cool bug where the above GET endpoint does NOT return newly added reviews... !!!
+                  // have to check the restaurant_id specific review endpoint to see the reviews get updated on the server...
+
                   if (response.status === 200) {
                     return response.json().then(function(reviews) {
                       //for each review, get its restaurant id and push that review in the right restaurant's reviews array
@@ -457,19 +471,20 @@ class Controller {
   }
 
   putFavorite(id, boolFav) {
+    let self = this;
     fetch(this._DATABASE_URL + 'restaurants/' + id + '/?is_favorite=' + boolFav, { method: 'PUT'})
       .then(function(response) {
         //nothing for now
       }).catch(function(error) {
         console.log('Error in favorite toggle: ' + error);
-        this.saveServerRequest('putFavorite', {restaurant_id: id, is_favorite: boolFav});
+        self.saveServerRequest('putFavorite', {restaurant_id: id, is_favorite: boolFav});
       });
   }
 
   /*** this is mainly used in restaurant_info.js.  However, if user regains connection and there's a stored
   server request to post a new review, then the main page may need to call this function***/
   postReview(reviewObj) {
-    self = this;
+    let self = this;
     fetch(self._DATABASE_URL + 'reviews/', {
         method: 'POST',
         headers: {'content-type': 'application/json'},
@@ -513,7 +528,20 @@ class Controller {
 
     //store in local storage to call later:
     localStorage.setItem('serverRequests', JSON.stringify(arrRequests));
-  } 
+  }
+
+  executeSavedServerRequests(arrRequests) {
+    let self = this;
+
+    arrRequests.forEach(function(request) {
+      if (request.func === 'putFavorite') {
+        self.putFavorite(request.data.restaurant_id, request.data.is_favorite);
+      }
+      else {  //it's a post review request
+        self.postReview(request.data)
+      }
+    });
+  }
 
   registerServiceWorker() {
     if (!navigator.serviceWorker) return;
@@ -556,4 +584,38 @@ document.addEventListener('DOMContentLoaded', function(event) {
 
   controller.registerServiceWorker();  
   controller.loadSite();
+
+  //for loss/regain of internet connectivity:  (via:  https://davidwalsh.name/detecting-online)
+  /*** Handle any issues if connectivity was or is lost:  ***/
+  if (!navigator.onLine) {
+    view.displayOfflineMessage(true);
+  }
+  else {
+    //execute any stored serverRequests
+    if (localStorage.hasOwnProperty('serverRequests')) {
+      //now execute those server requests
+      controller.executeSavedServerRequests(JSON.parse(localStorage.getItem('serverRequests')));
+
+      //remove from localStorage:
+      localStorage.removeItem('serverRequests');
+    }
+  }
+
+  //for loss/regain of internet connectivity:
+  window.addEventListener('offline', function() {
+    view.displayOfflineMessage(true);
+  });
+
+  window.addEventListener('online', function() {
+    view.displayOfflineMessage(false);
+
+    if (localStorage.hasOwnProperty('serverRequests')) {
+      //now execute those server requests
+      controller.executeSavedServerRequests(JSON.parse(localStorage.getItem('serverRequests')));
+
+      //remove from localStorage:
+      localStorage.removeItem('serverRequests');
+    }
+  });
 });
+

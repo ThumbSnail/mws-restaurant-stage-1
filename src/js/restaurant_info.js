@@ -57,7 +57,7 @@ class Model {
       count += restaurant.reviews.length;
     });
 
-    return count;
+    return count + 1;
   }
 
   addReview(reviewObj) {
@@ -98,12 +98,22 @@ class View {
     this._showMapBtn = document.getElementById('show-map');
 
     this._displayedRestaurant = '';
+    this._offlineMessage = document.getElementById('offline-message');
 
     /*** Form ***/
     this._formContainer = document.getElementById('form-container');
     this._userName = document.getElementById('form-name');
     this._userRating = document.getElementById('form-rating');
     this._userComments = document.getElementById('form-comments');
+  }
+
+  displayOfflineMessage(boolShow) {
+    if (boolShow) {
+      this._offlineMessage.className = '';
+    }
+    else {
+      this._offlineMessage.className = 'hidden-form';
+    }
   }
 
   /*** Restaurant Entry Related ***/
@@ -134,13 +144,20 @@ class View {
     address.innerHTML = this._displayedRestaurant.address;
 
     const image = document.getElementById('restaurant-img');
-    image.className = 'restaurant-img'
+    image.className = 'restaurant-img';
     let strName = this._displayedRestaurant.imgUrl;
-    strName = strName.replace('/img/', '').replace('.jpg', '');
-    strName = '/img/' + strName + '-2x.jpg';
+    //add error handling in case server doesn't have an image:
+    if (strName === '/img/undefined') {
+      strName = '/img/generic.png';
+      image.alt = "Generic Restaurant Placeholder Image";
+    }
+    else {
+      strName = strName.replace('/img/', '').replace('.jpg', '');
+      strName = '/img/' + strName + '-2x.jpg';
+      image.alt = this._displayedRestaurant.name;
+    }
     image.src = strName;
-    //image.srcset = strName + ' 2x';  //serviceworker renders this pointless
-    image.alt = this._displayedRestaurant.name;
+    //image.srcset = strName + ' 2x';  //serviceworker caches largest photo initially,rendering srcset pointless
 
     const cuisine = document.getElementById('restaurant-cuisine');
     cuisine.innerHTML = this._displayedRestaurant.cuisine_type;
@@ -341,12 +358,13 @@ class Controller {
   }
 
   putFavorite(id, boolFav) {
+    let self = this;
     fetch(this._DATABASE_URL + 'restaurants/' + id + '/?is_favorite=' + boolFav, { method: 'PUT'})
       .then(function(response) {
         //nothing for now
       }).catch(function(error) {
         console.log('Error in favorite toggle: ' + error);
-        this.saveServerRequest('putFavorite', {restaurant_id: id, is_favorite: boolFav});
+        self.saveServerRequest('putFavorite', {restaurant_id: id, is_favorite: boolFav});
       });
   }
 
@@ -380,7 +398,7 @@ class Controller {
   }
 
   postReview(reviewObj) {
-    self = this;
+    let self = this;
     fetch(self._DATABASE_URL + 'reviews/', {
         method: 'POST',
         headers: {'content-type': 'application/json'},
@@ -424,14 +442,27 @@ class Controller {
 
     //store in local storage to call later:
     localStorage.setItem('serverRequests', JSON.stringify(arrRequests));
-  } 
+  }
+
+  executeSavedServerRequests(arrRequests) {
+    let self = this;
+
+    arrRequests.forEach(function(request) {
+      if (request.func === 'putFavorite') {
+        self.putFavorite(request.data.restaurant_id, request.data.is_favorite);
+      }
+      else {  //it's a post review request
+        self.postReview(request.data)
+      }
+    });
+  }
 
   /*** IndexedDB Related ***/
 
   openDatabase() {
     if (!('indexedDB' in window)) return Promise.resolve();
 
-    self = this;
+    let self = this;
 
     return idb.open(self._DB_NAME, self._DB_VER, function(upgradeDb) {
       upgradeDb.createObjectStore(self._DB_OBJ_STORE, {
@@ -449,7 +480,7 @@ class Controller {
   }
 
   fetchRestaurantData() {
-    self = this;
+    let self = this;
 
     //First, check the database
     return self._dbPromise.then(function(db) {
@@ -468,6 +499,10 @@ class Controller {
 
                 // now also grab the review data for each restaurant (so that any page can be accessed with full details offline upon first vist)
                 return fetch(self._DATABASE_URL + 'reviews').then(function(response) {
+
+                  // !!! The server has a cool bug where the above GET endpoint does NOT return newly added reviews... !!!
+                  // have to check the restaurant_id specific review endpoint to see the reviews get updated on the server...
+
                   if (response.status === 200) {
                     return response.json().then(function(reviews) {
                       //for each review, get its restaurant id and push that review in the right restaurant's reviews array
@@ -551,4 +586,37 @@ document.addEventListener('DOMContentLoaded', function(event) {
 
   controller.registerServiceWorker();  //register serviceworker on this subpage in case user visited the subpage directly and didn't come via the main page
   controller.loadContent();
+
+  //for loss/regain of internet connectivity:  (via:  https://davidwalsh.name/detecting-online)
+  /*** Handle any issues if connectivity was or is lost:  ***/
+  if (!navigator.onLine) {
+    view.displayOfflineMessage(true);
+  }
+  else {
+    //execute any stored serverRequests
+    if (localStorage.hasOwnProperty('serverRequests')) {
+      //now execute those server requests
+      controller.executeSavedServerRequests(JSON.parse(localStorage.getItem('serverRequests')));
+
+      //remove from localStorage:
+      localStorage.removeItem('serverRequests');
+    }
+  }
+
+  //for loss/regain of internet connectivity:
+  window.addEventListener('offline', function() {
+    view.displayOfflineMessage(true);
+  });
+
+  window.addEventListener('online', function() {
+    view.displayOfflineMessage(false);
+    
+    if (localStorage.hasOwnProperty('serverRequests')) {
+      //now execute those server requests
+      controller.executeSavedServerRequests(JSON.parse(localStorage.getItem('serverRequests')));
+
+      //remove from localStorage:
+      localStorage.removeItem('serverRequests');
+    }
+  });
 });
