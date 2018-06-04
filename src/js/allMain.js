@@ -179,8 +179,8 @@ class View {
       image.alt = "Generic Restaurant Placeholder Image";
     }
     else {
-      strName = strName.replace('/img/', '').replace('.jpg', '');
-      strName = '/img/' + strName + '-2x.jpg';
+      strName = strName.replace('/img/', '').replace('.webp', '');
+      strName = '/img/' + strName + '.webp';
       image.alt = restaurant.name;
     }
     image.src = strName;

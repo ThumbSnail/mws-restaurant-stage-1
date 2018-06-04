@@ -11,7 +11,7 @@ const URLS_TO_CACHE = [
   '/img/generic.png'
 ];
 for (let i = 1; i <= 10; i++) {
-  URLS_TO_CACHE.push('/img/' + i + '-2x.jpg');
+  URLS_TO_CACHE.push('/img/' + i + '.webp');
 }
 /*Initially caching everything renders srcset pointless, so just download the largest file.*/
 
